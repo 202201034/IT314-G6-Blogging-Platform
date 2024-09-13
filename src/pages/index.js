@@ -57,6 +57,18 @@ export default function Page() {
               Register
             </Link>
           </p>
+          <p className="text-center text-gray-600 mt-4">
+            Link{' '}
+            <Link href="/blog_write" className="text-indigo-600 hover:text-indigo-500">
+              Link
+            </Link>
+          </p>
+          <p className="text-center text-gray-600 mt-4">
+            Home{' '}
+            <Link href="/home" className="text-indigo-600 hover:text-indigo-500">
+              Link
+            </Link>
+          </p>
         </form>
       </div>
     </div>
