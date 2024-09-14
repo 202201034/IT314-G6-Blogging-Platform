@@ -1,13 +1,31 @@
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/router'; // Import useRouter for navigation
+import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../firebase_auth'; // Ensure correct import
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter(); // Initialize useRouter for navigation
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login submitted with:', { email, password });
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/home'); // Redirect to home page on successful login
+    } catch (error) {
+      setError('Error logging in: ' + error.message);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      router.push('/'); // Redirect to home page on successful Google login
+    } catch (error) {
+      setError('Error logging in with Google: ' + error.message);
+    }
   };
 
   return (
@@ -15,6 +33,11 @@ export default function Login() {
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg border border-gray-200">
         <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Login</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded-md">
+              {error}
+            </div>
+          )}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email
@@ -49,11 +72,18 @@ export default function Login() {
           >
             Login
           </button>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            className="w-full px-4 py-2 bg-red-600 text-white font-semibold rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 mt-4"
+          >
+            Sign in with Google
+          </button>
           <p className="text-center text-gray-600 mt-4">
             Don't have an account?{' '}
-            <Link href="/register" className="text-indigo-600 hover:text-indigo-500">
+            <a href="/register" className="text-indigo-600 hover:text-indigo-500">
               Register
-            </Link>
+            </a>
           </p>
         </form>
       </div>

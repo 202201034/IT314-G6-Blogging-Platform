@@ -9,8 +9,8 @@ export default function Navbar() {
       <div className="flex flex-col mb-auto">
         {/* Logo and Title */}
         <div className="flex flex-col items-start mt-4 mb-40 ml-auto mr-auto">
-          <h1 className="text-2xl text-indigo-600 font-bold">Blog</h1>
-          <h1 className="text-2xl font-bold">Me</h1>
+          <h1 className="text-2xl text-indigo-600 font-bold mx-auto">Blog</h1>
+          <h1 className="text-2xl font-bold mx-auto">Me</h1>
         </div>
 
         {/* Navigation Links */}

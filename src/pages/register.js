@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from '../firebase_auth';
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -15,10 +18,12 @@ export default function Register() {
       return;
     }
 
-    // Handle registration logic here (e.g., send data to your API)
-
-    console.log('Register submitted with:', { email, password });
-    setError(''); // Clear error if everything is okay
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      router.push('/login'); // Redirect to login page on successful registration
+    } catch (error) {
+      setError('Error registering user: ' + error.message);
+    }
   };
 
   return (
@@ -81,9 +86,9 @@ export default function Register() {
           </button>
           <p className="text-center text-gray-600 mt-4">
             Already have an account?{' '}
-            <Link href="/login" className="text-indigo-600 hover:text-indigo-500">
+            <a href="/login" className="text-indigo-600 hover:text-indigo-500">
               Login
-            </Link>
+            </a>
           </p>
         </form>
       </div>

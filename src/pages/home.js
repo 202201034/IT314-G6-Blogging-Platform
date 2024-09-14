@@ -31,9 +31,9 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-bg p-6">
       <Navbar />
-      <div className="ml-64 p-6"> {/* Add margin-left to accommodate the fixed navbar */}
+      <div className="ml-10 p-6"> {/* Add margin-left to accommodate the fixed navbar */}
         <div className="container mx-auto">
           <h1 className="text-4xl font-bold mb-6 text-gray-800">Home</h1>
 
