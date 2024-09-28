@@ -1,15 +1,31 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { auth } from "../firebase/firebase";
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import Image from "next/image";
+import { useAuth } from "@/firebase/auth";
+import { useRouter } from "next/router";
+import Loader from "./components/Loader";
+require('dotenv').config();
+// import Link from "next/link";
 
 const provider = new GoogleAuthProvider();
 export default function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const {authUser, isLoading, setAuthUser} = useAuth();
+
+    const router = useRouter();
+
+    useEffect(()=>{
+
+        if(!isLoading && authUser){
+            router.push("/");
+        }
+
+    }, [authUser,isLoading])
 
   const signupHandler = async () => {
     if (!email || !password || !username) return;
@@ -33,13 +49,13 @@ export default function Register() {
     }
   };
 
-  return (
+  return isLoading || (!isLoading && authUser) ? <Loader /> : (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-black via-black to-black">
-    <div className="bg-white shadow-lg rounded-lg overflow-hidden flex max-w-4xl w-full">
+      <div className="bg-white shadow-lg rounded-lg overflow-hidden flex max-w-4xl w-full">
         {/* Left side - image section */}
         <div className="hidden md:flex w-1/2 bg-black items-center justify-center relative">
           <Image
-            src="/black_img.png"
+            src="/img.png"
             alt="Blogging site welcome image"
             layout="fill" // This will make the image cover the entire container
             objectFit="cover" // This ensures the image covers the div without distortion
@@ -56,14 +72,14 @@ export default function Register() {
           <h2 className="text-3xl font-semibold text-gray-700">Signup</h2>
 
           <form onSubmit={(e) => e.preventDefault()} className="mt-6">
-            <div>
+            <div className="mt-4" >
               <label className="block text-gray-600">Name</label>
               <input
                 type="text"
                 name="name"
                 required
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full mt-2 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full mt-2 p-2 text-black bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your name"
               />
             </div>
@@ -75,7 +91,7 @@ export default function Register() {
                 name="email"
                 required
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full mt-2 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full mt-2 p-2 text-black bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your Email"
               />
             </div>
@@ -87,14 +103,14 @@ export default function Register() {
                 name="password"
                 required
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full mt-2 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full mt-2 p-2 text-black bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your password"
               />
             </div>
 
             <button
               type="submit"
-              className="mt-6 w-full p-3 bg-gradient-to-r from-gray-800 to-gray-600 text-white font-semibold rounded-lg"
+              className="mt-6 w-full p-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-semibold rounded-lg hover:shadow-xl transition duration-300"
               onClick={signupHandler}
             >
               Signup
@@ -114,7 +130,7 @@ export default function Register() {
           >
             <FcGoogle size={18} />
             <span className="font-medium text-black group-hover:text-white">
-              Sign Up with Google
+              Sign In with Google
             </span>
           </div>
 
