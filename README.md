@@ -6,6 +6,7 @@ Run the following commands for installing required libraries:
 npm install
 npm install firebase
 npm install dotenv
+npm install @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/react-fontawesome
 ```
 
 Afterwards, run the development server:
