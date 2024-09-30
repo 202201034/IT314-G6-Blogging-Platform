@@ -124,7 +124,7 @@ export default function Navbar() {
 
           {/* Create New Blog Button and Profile Icon */}
           <div className="hidden lg:flex justify-center space-x-6 items-center">
-            <a href="/create-blog" className="create-new-blog-btn">
+            <a href="/blog_write" className="create-new-blog-btn">
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
               Create New Blog
             </a>

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from 'react';
-import Navbar from './nav';
+import { getAuth } from 'firebase/auth';
 import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css'; // Import Quill's styles
-import { XIcon } from '@heroicons/react/solid'; // Import Heroicons XIcon for the delete button
+import 'react-quill/dist/quill.snow.css';
+import { db, storage } from '../firebase/firebase';
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
-// Dynamically import ReactQuill with SSR disabled
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 export default function BlogEditor() {
@@ -14,17 +15,73 @@ export default function BlogEditor() {
   const [content, setContent] = useState('');
   const [hashtagInput, setHashtagInput] = useState('');
   const [hashtags, setHashtags] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const auth = getAuth();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Blog submitted with:', { title, content, hashtags });
-    // You would typically send the data to your server here using an API call
+  const handleSubmit = async (e) => {
+    e.preventDefault();  
+    setLoading(true);  // Start loading state
+    setError('');
+
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+      
+      // Process content images before saving to Firestore
+      const updatedContent = await processContentImages(content);
+
+      await addDoc(collection(db, 'blogs'), {
+        title,
+        content: updatedContent, // Save content with Firebase image URLs
+        hashtags,
+        userId: auth.currentUser.uid,
+        timestamp: new Date(),
+      });
+
+      alert('Blog submitted successfully!');
+      setTitle('');
+      setContent('');
+      setHashtags([]);
+    } catch (error) {
+      console.error('Error submitting blog:', error);
+      setError('Failed to submit blog. Please try again.');
+    } finally {
+      setLoading(false); // Always stop loading state
+    }
+  };
+
+  const processContentImages = async (htmlContent) => {
+    const imgTagRegex = /<img[^>]+src="([^">]+)"/g;
+    let match;
+    let updatedContent = htmlContent;
+
+    while ((match = imgTagRegex.exec(htmlContent)) !== null) {
+      const imgSrc = match[1]; // Get the src value
+
+      // If the image is base64-encoded, upload it to Firebase
+      if (imgSrc.startsWith('data:image/')) {
+        try {
+          const imageRef = ref(storage, `images/${Date.now()}`);
+          await uploadString(imageRef, imgSrc, 'data_url');
+          const imageUrl = await getDownloadURL(imageRef);
+
+          // Replace the base64 image with the Firebase URL in the content
+          updatedContent = updatedContent.replace(imgSrc, imageUrl);
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          setError('Failed to upload images. Please try again.');
+          return htmlContent; // Return the original content in case of error
+        }
+      }
+    }
+
+    return updatedContent; // Return the updated content with Firebase image URLs
   };
 
   const addHashtag = () => {
     if (hashtagInput && !hashtags.includes(`#${hashtagInput}`)) {
       setHashtags([...hashtags, `#${hashtagInput}`]);
-      setHashtagInput(''); // Clear input after adding
+      setHashtagInput('');
     }
   };
 
@@ -34,12 +91,10 @@ export default function BlogEditor() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
-      <Navbar />
-      <div className="pl-10 mx-auto"> {/* Adjust margin to accommodate the fixed navbar */}
+      <div className="pl-10 mx-auto">
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-3xl w-full">
           <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">Create a Blog Post</h1>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Title Field */}
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                 Blog Title
@@ -55,7 +110,6 @@ export default function BlogEditor() {
               />
             </div>
 
-            {/* React Quill Editor */}
             <div>
               <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
                 Blog Content
@@ -66,11 +120,10 @@ export default function BlogEditor() {
                 onChange={setContent}
                 className="h-auto mb-8"
                 placeholder="Write your blog content here..."
-                modules={modules} // Pass the modules configuration
+                modules={modules}
               />
             </div>
 
-            {/* Hashtag Input */}
             <div>
               <label htmlFor="hashtags" className="block text-sm font-medium text-gray-700 mb-1">
                 Hashtags
@@ -92,8 +145,7 @@ export default function BlogEditor() {
                   Add
                 </button>
               </div>
-              {/* Display hashtags */}
-              <div className="flex flex-wrap space-x-2 ">
+              <div className="flex flex-wrap space-x-2">
                 {hashtags.map((hashtag, index) => (
                   <span key={index} className="bg-blue-100 text-blue-800 mx-3 px-3 py-2 my-1 rounded-full text-sm flex items-center space-x-2">
                     <span>{hashtag}</span>
@@ -102,20 +154,23 @@ export default function BlogEditor() {
                       onClick={() => removeHashtag(hashtag)}
                       className="text-blue-500 hover:text-blue-700 focus:outline-none"
                     >
-                      <XIcon className="h-5 w-5" />
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-11.707a1 1 0 00-1.414-1.414L10 8.586 7.707 6.293a1 1 0 00-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 101.414 1.414L10 11.414l2.293 2.293a1 1 0 001.414-1.414L11.414 10l2.293-2.293z" clipRule="evenodd" />
+                      </svg>
                     </button>
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               className="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              disabled={loading} // Disable the button while loading
             >
-              Publish Blog
+              {loading ? 'Submitting...' : 'Publish Blog'}
             </button>
+            {error && <p className="text-red-500">{error}</p>}
           </form>
         </div>
       </div>
@@ -123,17 +178,16 @@ export default function BlogEditor() {
   );
 }
 
-// Configure the Quill editor toolbar with font sizes from 1 to 6
 const modules = {
   toolbar: [
-    [{ 'font': [] }], // Include font options
-    [{ 'size': ['small', 'medium', 'large', 'huge'] }], // Font sizes: small, medium, large, huge
-    [{ 'header': [1, 2, 3, 4, 5, 6, false] }], // Headers (H1 to H6)
-    ['bold', 'italic', 'underline', 'strike'], // Basic text formatting
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }], // List options
-    [{ 'align': [] }], // Text alignment
-    ['link', 'image', 'video'], // Include link, image, and video options
-    [{ 'color': [] }, { 'background': [] }], // Text color and background color
-    ['clean'] // Clear formatting
+    [{ 'font': [] }],
+    [{ 'size': ['small', 'medium', 'large', 'huge'] }],
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    [{ 'align': [] }],
+    ['link', 'image', 'video'],
+    [{ 'color': [] }, { 'background': [] }],
+    ['clean']
   ],
 };
