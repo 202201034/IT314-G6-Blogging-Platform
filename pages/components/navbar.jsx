@@ -45,11 +45,14 @@ export default function Navbar() {
     Router.push('../login');
     setIsProfileMenuOpen(false);
   };
+  const handleProfileClick = () => {
+    Router.push('/profile'); // Redirect to the profile page
+  };
 
   let navitem;
   if(authUser){
     navitem=(
-    <div onClick={handleSignOut} className="absolute right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg py-1 z-10 cursor-pointer">
+    <div onClick={handleProfileClick} className="absolute right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg py-1 z-10 cursor-pointer">
       <button className="block w-full px-4 py-2 text-sm text-white text-left hover:bg-neutral-700 focus:outline-none">
         Sign Out
       </button>
