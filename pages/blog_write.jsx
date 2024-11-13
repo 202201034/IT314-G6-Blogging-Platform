@@ -96,7 +96,7 @@ export default function BlogEditor() {
     <div className="p-6 flex items-center justify-center" style={{ backgroundColor: '#e9f0f5' }}>
       <div className="pl-10 mx-auto">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+            <div className="p-6 mx-auto justify-center bg-black rounded-md">
             <div>
               <textarea
                 type="text"
