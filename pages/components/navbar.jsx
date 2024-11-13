@@ -1,6 +1,7 @@
 import React, { useState, useEffect} from 'react';
 import Image from 'next/image';
 import logo from './logo.png';
+import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faUser, faSearch, faBell } from '@fortawesome/free-solid-svg-icons';
 import Router from 'next/router';
@@ -52,10 +53,14 @@ export default function Navbar() {
   let navitem;
   if(authUser){
     navitem=(
-    <div onClick={handleProfileClick} className="absolute right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg py-1 z-10 cursor-pointer">
-      <button className="block w-full px-4 py-2 text-sm text-white text-left hover:bg-neutral-700 focus:outline-none">
+    <div  className="absolute right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg py-1 z-10 cursor-pointer">
+      <button onClick={handleProfileClick} className="block w-full px-4 py-2 text-sm text-white text-left hover:bg-neutral-700 focus:outline-none">
+        Profile
+      </button>
+      <button onClick={handleSignOut} className="block w-full px-4 py-2 text-sm text-white text-left hover:bg-neutral-700 focus:outline-none">
         Sign Out
       </button>
+
     </div>);
   }
   else{
@@ -68,10 +73,11 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 py-3 backdrop-blur-lg border-b border-neutral-700/80">
+    <nav className="sticky bg-black top-0 z-50 py-3 backdrop-blur-lg border-b border-neutral-700/80" >
       <div className="container px-4 mx-auto relative lg:text-sm">
         <div className="flex justify-between items-center">
           {/* Logo Section */}
+          <Link href="/">
           <div className="flex items-center flex-shrink-0">
             <Image
               src={logo}
@@ -82,6 +88,7 @@ export default function Navbar() {
             />
             <span className="text-2xl tracking-tight">blogX</span>
           </div>
+          </Link>
 
           {/* Search Field */}
           <div className="hidden lg:flex flex-grow mx-4 max-w-xl">

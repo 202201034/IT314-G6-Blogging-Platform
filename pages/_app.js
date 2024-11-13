@@ -1,4 +1,6 @@
 import "@/styles/globals.css";
+import 'react-quill/dist/quill.snow.css';
+import '@/styles/blog_styles.css';
 import Layout from './components/layout'
 import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css'; // Import the CSS

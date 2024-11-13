@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { getAuth } from 'firebase/auth';
 import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css';
+import Loader from "./components/Loader";
 import { db, storage } from '../firebase/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
@@ -17,6 +17,7 @@ export default function BlogEditor() {
   const [hashtags, setHashtags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const auth = getAuth();
 
   const handleSubmit = async (e) => {
@@ -89,31 +90,34 @@ export default function BlogEditor() {
     setHashtags(hashtags.filter(hashtag => hashtag !== hashtagToRemove));
   };
 
+  if(isLoading) return <Loader />;
+  else{
   return (
-    <div className="min-h-screen bg-gray-100 p-6 flex items-center justify-center">
+    <div className="p-6 flex items-center justify-center" style={{ backgroundColor: '#e9f0f5' }}>
       <div className="pl-10 mx-auto">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-3xl w-full">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800 text-center">Create a Blog Post</h1>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                Blog Title
-              </label>
-              <input
+            <div>
+              <textarea
                 type="text"
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2 border text-black rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter your blog title"
+                onInput={(e) => {
+                  // Reset height to auto to get the new scroll height
+                  e.target.style.height = 'auto';
+                  // Setting the height to the scroll height to allow vertical expansion
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
+                className="w-full px-4 py-2 bg-transparent rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-transparent sm:text-4xl"
+                placeholder="Title"
+                rows = "1"
+                resize = "none"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-                Blog Content
-              </label>
               <ReactQuill
                 theme="snow"
                 value={content}
@@ -123,24 +127,23 @@ export default function BlogEditor() {
                 modules={modules}
               />
             </div>
+            </div>
 
             <div>
-              <label htmlFor="hashtags" className="block text-sm font-medium text-gray-700 mb-1">
-                Hashtags
-              </label>
               <div className="flex items-center space-x-2 mb-4">
                 <input
                   type="text"
                   id="hashtags"
                   value={hashtagInput}
                   onChange={(e) => setHashtagInput(e.target.value)}
-                  className="w-full px-4 py-2 border text-blue-500 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="Enter a hashtag"
+                  className="w-full px-3 py-2 p-1 mx-auto justify-center bg-black rounded-md focus:outline-none focus:ring-0 focus:ring-transparent"
+                  placeholder="Add your hastags here"
                 />
                 <button
                   type="button"
                   onClick={addHashtag}
-                  className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-4 py-2 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-0 focus:ring-transparent"
+                  style={{ backgroundColor: '#008AFF' }}
                 >
                   Add
                 </button>
@@ -152,7 +155,7 @@ export default function BlogEditor() {
                     <button
                       type="button"
                       onClick={() => removeHashtag(hashtag)}
-                      className="text-blue-500 hover:text-blue-700 focus:outline-none"
+                      className="text-blue-500 hover:text-blue-500 focus:outline-none"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-11.707a1 1 0 00-1.414-1.414L10 8.586 7.707 6.293a1 1 0 00-1.414 1.414L8.586 10l-2.293 2.293a1 1 0 101.414 1.414L10 11.414l2.293 2.293a1 1 0 001.414-1.414L11.414 10l2.293-2.293z" clipRule="evenodd" />
@@ -165,17 +168,18 @@ export default function BlogEditor() {
 
             <button
               type="submit"
-              className="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-4 py-2 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-0 focus:ring-transparent"
+              style={{ backgroundColor: '#008AFF' }}
               disabled={loading} // Disable the button while loading
             >
               {loading ? 'Submitting...' : 'Publish Blog'}
             </button>
             {error && <p className="text-red-500">{error}</p>}
           </form>
-        </div>
       </div>
     </div>
   );
+  }
 }
 
 const modules = {

@@ -1,0 +1,68 @@
+/* quill-custom.css */
+
+/* Customize the toolbar */
+.ql-toolbar {
+    background-color: #f0f0f0; /* Background color for the toolbar */
+    border-radius: 5px;
+    /* border: 1px solid #ccc;    Border for the toolbar */
+    /* border-radius: 4px;        Rounded corners for the toolbar */
+}
+
+/* Customize the editor */
+.ql-container {
+    border: none;               /* Remove border */
+    box-shadow: none;          /* Remove shadow if any */
+    border-radius: 0;          /* Remove rounded corners */
+    height: auto;              /* Set height for the editor */
+    max-width: 820px;          /* Set a maximum width for the editor */
+    width: 100%;               /* Set width to 100% of the container */
+    overflow: hidden;          /* Hide overflow to prevent horizontal expansion */
+    focus:outline-none;
+    focus:ring-0;
+    focus:border-transparent;
+    margin-bottom: 20px;
+}
+
+.ql-editor {
+    background-color: transparent; /* Set background color to black */
+    color: #ffffff; 
+    padding-bottom: 100px; /* Add padding only to the bottom */
+    //padding-left: 0;  /* Remove left padding */
+    padding-right: 0; /* Remove right padding */
+    padding-top: 5;   /* Remove top padding */
+    min-width: 60px;
+    font-size: 20px;
+
+    margin-bottom: 250px;
+    caret-color: #ffffff; 
+}
+
+
+.ql-container.ql-snow {
+    border: none;
+}
+
+
+
+/* Customize toolbar button styles */
+.ql-toolbar .ql-formats {
+    margin-right: 8px;         /* Spacing between formats */
+}
+
+/* Customize specific button styles */
+.ql-toolbar .ql-bold {
+    color: #4CAF50;            /* Color for bold button */
+}
+
+.ql-toolbar .ql-italic {
+    color: #FF5722;            /* Color for italic button */
+}
+
+/* Customize placeholder styles */
+.ql-editor.ql-blank::before {
+    color: #999;               /* Placeholder text color */
+}
+
+.textArea {
+    width: 100%;
+}
