@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'; 
-import { db, storage } from '../firebase/firebase'; 
-import { useRouter } from 'next/router';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../firebase/firebase';
 import { auth } from '../firebase/firebase';
+import { Camera } from 'lucide-react'; // Import Camera from react-feather
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -16,7 +16,7 @@ export default function ProfilePage() {
   const [profileImage, setProfileImage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState('');
-  const [imageFile, setImageFile] = useState(null); 
+  const [imageFile, setImageFile] = useState(null);
   const [userBlogs, setUserBlogs] = useState([]);
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true);
   const [followersCount, setFollowersCount] = useState(0);
@@ -61,7 +61,7 @@ export default function ProfilePage() {
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
-    setImageFile(file); 
+    setImageFile(file);
   };
 
   const uploadProfileImage = async () => {
@@ -82,9 +82,14 @@ export default function ProfilePage() {
   };
 
   const checkUsernameAvailability = async (newUsername) => {
-    const usernameQuery = query(collection(db, 'usernames'), where('username', '==', newUsername));
-    const querySnapshot = await getDocs(usernameQuery);
-    return querySnapshot.empty; // Return true if username is available
+    try {
+      const usernameQuery = query(collection(db, "users"), where("username", "==", newUsername));
+      const querySnapshot = await getDocs(usernameQuery);
+      return querySnapshot.empty; // Return true if username is available
+    } catch (error) {
+      console.error("Error checking username availability:", error);
+      return false; // In case of error, return false (username might be taken or error occurred)
+    }
   };
 
   const handleSave = async () => {
@@ -141,129 +146,170 @@ export default function ProfilePage() {
     setUsername(user.username);
   };
 
-  const viewFollowers = async () => {
-    // Redirect to followers page or show followers modal
-    console.log('Followers:', followersCount);
-  };
-
-  const viewFollowing = async () => {
-    // Redirect to following page or show following modal
-    console.log('Following:', followingCount);
-  };
-
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-6">
-      <div className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-lg border border-gray-200">
-        <h1 className="text-3xl font-bold mb-4 text-center text-gray-800">Profile</h1>
+    <div className="min-h-screen bg-blue-200 p-8">
+      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
         {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-300 rounded-md">
+          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md">
             {error}
           </div>
         )}
         {user ? (
-          <div className="mb-6">
-            <div className="flex items-center mb-8">
-              {profileImage ? (
-                <img src={profileImage} alt="Profile" className="w-32 h-32 rounded-full object-cover" />
-              ) : (
-                <div className="w-32 h-32 rounded-full bg-gray-300 flex items-center justify-center">
-                  <span className="text-gray-600">No Image</span>
+          <div className="space-y-8">
+            {/* Header Section */}
+            {!isEditing ? (
+  <>
+    <div className="flex justify-between items-center mb-6">
+      <span className="text-xl text-gray-700 font-normal">@{username}</span>
+      <div className="flex items-center space-x-3">
+        <button
+          onClick={handleEdit}
+          className="bg-blue-500 text-white px-4 py-1 rounded-md"
+        >
+          Edit Profile
+        </button>
+      </div>
+    </div>
+
+    {/* Profile Picture, Name, Bio, and Stats Section */}
+    <div className="flex items-start mb-8">
+      <div className="flex-shrink-0">
+        {profileImage ? (
+          <img src={profileImage} alt="Profile" className="w-24 h-24 rounded-full border border-gray-200" />
+        ) : (
+          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-400">No Image</span>
+          </div>
+        )}
+        <div className="text-center mt-4">
+          <span className="text-lg font-normal text-gray-800">{name}</span>
+        </div>
+        <div className="text-center mt-2 text-gray-500">
+          <p>{bio || "............................."}</p>
+        </div>
+      </div>
+
+      {/* Stats - Centered Inline with Profile Picture */}
+      <div className="flex-1 ml-8 flex justify-center items-center">
+        <div className="flex space-x-12 text-center">
+          <div>
+            <div className="text-indigo-500 font-semibold text-lg">{userBlogs.length}</div>
+            <div className="text-gray-600 text-sm">Blogs</div>
+          </div>
+          <div>
+            <div className="text-indigo-500 font-semibold text-lg">{followingCount}</div>
+            <div className="text-gray-600 text-sm">Following</div>
+          </div>
+          <div>
+            <div className="text-indigo-500 font-semibold text-lg">{followersCount}</div>
+            <div className="text-gray-600 text-sm">Followers</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Blogs Section */}
+    <div className="w-full">
+      <h2 className="text-xl font-medium text-gray-700 mb-6">Your Blogs</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {userBlogs.map((blog) => (
+          <div key={blog.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-800 mb-2">{blog.title}</h3>
+            <div className="text-gray-500 text-sm line-clamp-1 mb-6">
+              {blog.content || "..................................."}
+            </div>
+            <div className="text-right">
+              <a href={`/blog/${blog.id}`} className="text-indigo-600 text-sm">Read more</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </>
+) : (
+              // Edit Profile Form
+              <div className="space-y-6">
+                <div className="flex flex-col items-center space-y-4">
+                  {/* Profile Picture Section */}
+                  <div className="relative group">
+                    <div
+                      className={`w-32 h-32 rounded-full flex items-center justify-center ${
+                        imageFile ? "bg-gray-100" : "bg-gray-50 border-2 border-dashed border-gray-300"
+                      }`}
+                    >
+                      {imageFile ? (
+                        <img
+                          src={URL.createObjectURL(imageFile)}
+                          alt="Profile preview"
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <Camera className="w-8 h-8 text-gray-400" />
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      id="profilePicture"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="profilePicture"
+                      className="absolute bottom-0 right-0 bg-indigo-600 text-white p-2 rounded-full cursor-pointer hover:bg-indigo-700 transition-colors"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </label>
+                  </div>
                 </div>
-              )}
-              <h2 className="text-xl font-semibold m-auto text-gray-700">@{username}</h2>
-            </div>
-  
-            <div className="flex justify-center mb-4">
-              <div className="mx-2 text-center">
-                <button onClick={viewFollowers} className="text-blue-500">{followersCount}</button>
-                <p className="text-sm text-gray-500">Followers</p>
-              </div>
-              <div className="mx-2 text-center">
-                <button onClick={viewFollowing} className="text-blue-500">{followingCount}</button>
-                <p className="text-sm text-gray-500">Following</p>
-              </div>
-              <div className="mx-2 text-center">
-                <p className="text-blue-500">{userBlogs.length}</p>
-                <p className="text-sm text-gray-500">Blogs</p>
-              </div>
-            </div>
-  
-            {isEditing ? (
-              <div>
-                <div className="mb-4">
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
                   <input
                     type="text"
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                  <input
-                    type="text"
-                    id="username"
                     value={username}
                     onChange={async (e) => {
                       setUsername(e.target.value);
                       const isAvailable = await checkUsernameAvailability(e.target.value);
                       setIsUsernameAvailable(isAvailable);
                     }}
-                    className={`w-full px-4 py-2 border ${isUsernameAvailable ? 'border-gray-300' : 'border-red-500'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                    className={`block w-full px-4 py-3 bg-gray-50 border ${isUsernameAvailable ? 'border-gray-300' : 'border-red-500'} rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black`}
+                    placeholder="Choose your username"
                   />
                   {!isUsernameAvailable && <p className="text-red-500">Username is taken.</p>}
                 </div>
-                <div className="mb-4">
-                  <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
                   <textarea
-                    id="bio"
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    rows="4"
+                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black resize-none"
+                    placeholder="Tell us about yourself..."
                   />
                 </div>
-                <div className="mb-4">
-                  <label htmlFor="profileImage" className="block text-sm font-medium text-gray-700 mb-1">Profile Image</label>
-                  <input
-                    type="file"
-                    id="profileImage"
-                    onChange={handleImageUpload}
-                    className="border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-md mr-2">Save</button>
-                  <button onClick={handleCancel} className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md">Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <h1 className="mb-2 font-bold text-xl text-black">{name}</h1>
 
-                <p className="mb-2 text-gray-700">{bio}</p>
-                <button onClick={handleEdit} className="text-blue-500">Edit Profile</button>
+                {/* Save and Cancel Buttons */}
+                <div className="flex justify-between items-center mt-4">
+                  <button
+                    onClick={handleCancel}
+                    className="bg-gray-300 text-gray-700 px-4 py-1 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="bg-indigo-500 text-white px-4 py-1 rounded-md"
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
             )}
           </div>
         ) : (
-          <p className="text-gray-600">Loading...</p>
-        )}
-  
-        <h2 className="text-xl font-bold mt-8 mb-4">Your Blogs ({userBlogs.length})</h2>
-        {userBlogs.length > 0 ? (
-          <ul className="space-y-4">
-            {userBlogs.map((blog) => (
-              <li key={blog.id} className="border border-gray-300 rounded-md p-4">
-                <h3 className="text-xl font-semibold">{blog.title}</h3>
-                <p className="text-gray-600">{blog.content.substring(0, 100)}...</p>
-                <a href={`/blog/${blog.id}`} className="text-blue-500 hover:underline">Read More</a>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-600">No blogs found.</p>
+          <p>Loading...</p>
         )}
       </div>
     </div>
