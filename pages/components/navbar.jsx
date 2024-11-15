@@ -12,6 +12,16 @@ export default function Navbar() {
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
   const { authUser, signOut } = useAuth();
 
+  const handleCreateBlogClick = () => {
+    if (authUser) {
+      // If the user is authenticated, navigate to the blog write page
+      Router.push('/blog_write');
+    } else {
+      // If the user is not authenticated, navigate to the login page
+      Router.push('/login');
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -113,31 +123,32 @@ export default function Navbar() {
                 <a href={item.href}>{item.label}</a>
               </li>
             ))}
-            {/* Notification Bell */}
-            <li className="relative">
-              <button onClick={toggleNotificationMenu} className="focus:outline-none">
-                <FontAwesomeIcon icon={faBell} className="text-white hover:text-orange-500" />
-              </button>
-              {isNotificationMenuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-neutral-800 rounded-md shadow-lg py-1 z-10">
-                  <div className="px-4 py-2 font-semibold text-white border-b border-neutral-700">Notifications</div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {/* Example notifications */}
-                    <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-neutral-700">New comment on your blog</a>
-                    <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-neutral-700">You have a new follower</a>
-                    {/* Add more notifications as needed */}
+            {/* Notification Bell (only show if user is authenticated)*/}
+            {authUser && (
+              <li className="relative">
+                <button onClick={toggleNotificationMenu} className="focus:outline-none">
+                  <FontAwesomeIcon icon={faBell} className="text-white hover:text-orange-500" />
+                </button>
+                {isNotificationMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-neutral-800 rounded-md shadow-lg py-1 z-10">
+                    <div className="px-4 py-2 font-semibold text-white border-b border-neutral-700">Notifications</div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {/* Example notifications */}
+                      <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-neutral-700">New comment on your blog</a>
+                      <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-neutral-700">You have a new follower</a>
+                      {/* Add more notifications as needed */}
+                    </div>
                   </div>
-                </div>
               )}
-            </li>
+            </li>)}
           </ul>
 
           {/* Create New Blog Button and Profile Icon */}
           <div className="hidden lg:flex justify-center space-x-6 items-center">
-            <a href="/blog_write" className="create-new-blog-btn">
+            <button onClick={handleCreateBlogClick} className="create-new-blog-btn">
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
               Create New Blog
-            </a>
+            </button>
             <div className="relative">
               <button onClick={toggleProfileMenu} className="focus:outline-none">
                 <FontAwesomeIcon icon={faUser} className="text-white hover:text-orange-500" />
