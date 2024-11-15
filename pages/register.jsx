@@ -1,14 +1,13 @@
 import { useState,useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
-import { auth } from "../firebase/firebase";
+import { auth, db } from "../firebase/firebase";
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import Image from "next/image";
 import { useAuth } from "@/firebase/auth";
 import { useRouter } from "next/router";
 import Loader from "./components/Loader";
-require('dotenv').config();
-// import Link from "next/link";
 
 const provider = new GoogleAuthProvider();
 export default function Register() {
@@ -17,33 +16,56 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const {authUser, isLoading, setAuthUser} = useAuth();
 
-    const router = useRouter();
+  const router = useRouter();
 
-    useEffect(()=>{
-
-        if(!isLoading && authUser){
-            router.push("/");
-        }
-
-    }, [authUser,isLoading])
+  useEffect(() => {
+    if (!isLoading && authUser) {
+      router.push("/complete_profile");
+    }
+  }, [authUser,isLoading]);
 
   const signupHandler = async () => {
     if (!email || !password || !username) return;
     try {
-      const user = await createUserWithEmailAndPassword(auth, email, password);
-      console.log(user);
+      // Create user with email and password
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Update display name in Firebase Authentication profile
+      await updateProfile(user, {
+        displayName: username,
+      });
+
+      // Add user data to Firestore 'users' collection
+      await setDoc(doc(db, "users", user.uid), {
+        name: username,
+        email: email,
+      });
+
+      console.log("User registered and data saved in Firestore:", user);
     } catch (error) {
       console.log("An error occurred", error);
     }
-    await updateProfile(auth.currentUser, {
-      displayName: username,
-    });
   };
 
   const signInWithGoogle = async () => {
     try {
-      const user = await signInWithPopup(auth, provider);
-      console.log(user);
+      const userCredential = await signInWithPopup(auth, provider);
+      const user = userCredential.user;
+
+      // Check if user already exists in Firestore
+      const userDoc = doc(db, "users", user.uid);
+      const userSnapshot = await getDoc(userDoc);
+
+      if (!userSnapshot.exists()) {
+        // Save new Google user data to Firestore
+        await setDoc(userDoc, {
+          name: user.displayName,
+          email: user.email,
+        });
+      }
+
+      console.log("User signed in with Google and data stored in Firestore if new");
     } catch (error) {
       console.error("An error occurred while Signing in", error);
     }
@@ -57,14 +79,14 @@ export default function Register() {
           <Image
             src="/img.png"
             alt="Blogging site welcome image"
-            layout="fill" // This will make the image cover the entire container
-            objectFit="cover" // This ensures the image covers the div without distortion
-            className="opacity-60" // Optional: adjust opacity if you want a more subtle image
+            layout="fill"
+            objectFit="cover"
+            className="opacity-60"
           />
-         <div className="text-white p-8 absolute z-10">
-          <h1 className="text-4xl font"><strong>Welcome to</strong> <br/> blogging site</h1>
-          <p className="mt-4">Start sharing your thoughts with the world!</p>
-        </div>
+          <div className="text-white p-8 absolute z-10">
+            <h1 className="text-4xl font"><strong>Welcome to</strong> <br/> blogging site</h1>
+            <p className="mt-4">Start sharing your thoughts with the world!</p>
+          </div>
         </div>
 
         {/* Right side - form section */}
@@ -130,7 +152,7 @@ export default function Register() {
           >
             <FcGoogle size={18} />
             <span className="font-medium text-black group-hover:text-white">
-              Sign In with Google
+              Sign Up with Google
             </span>
           </div>
 
