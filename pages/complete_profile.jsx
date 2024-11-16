@@ -13,6 +13,7 @@ const ProfileSetup = () => {
   const [bio, setBio] = useState("");
   const [location, setLocation] = useState("");
   const [interests, setInterests] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
 
@@ -46,7 +47,7 @@ const ProfileSetup = () => {
           bio,
           location,
           interests,
-          profilePicture: imagePreview,
+          profileImage: imagePreview,
         }, { merge: true });
 
         router.push('/');

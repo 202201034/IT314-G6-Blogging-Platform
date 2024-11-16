@@ -85,7 +85,7 @@ export default function ProfilePage() {
     try {
       const usernameQuery = query(collection(db, "users"), where("username", "==", newUsername));
       const querySnapshot = await getDocs(usernameQuery);
-      return querySnapshot.empty; // Return true if username is available
+      return ((user.username===newUsername) || querySnapshot.empty); // Return true if username is available
     } catch (error) {
       console.error("Error checking username availability:", error);
       return false; // In case of error, return false (username might be taken or error occurred)
