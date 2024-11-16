@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
-import { auth } from "../firebase/firebase";
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
+import { auth,db } from "../firebase/firebase";
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import Image from "next/image";
 import { useAuth } from "@/firebase/auth";
 import { useRouter } from "next/router";
 import Loader from "./components/Loader";
-require('dotenv').config();
+import { collection, query, where, getDocs } from "firebase/firestore";
+
+
 
 const provider = new GoogleAuthProvider();
 
@@ -17,12 +19,13 @@ export default function Login() {
   const [error, setError] = useState("");  // State for error message
   const { authUser, isLoading } = useAuth();
   const router = useRouter();
+  const [isChecking, setIsChecking] = useState(false); // State to prevent intermediate rendering
 
   useEffect(() => {
-    if (!isLoading && authUser) {
+    if ( !isLoading && !isChecking && authUser) {
       router.push("/");
     }
-  }, [authUser, isLoading]);
+  }, [authUser, isLoading, isChecking]);
 
   const loginHandler = async () => {
     setError("");  // Reset error before trying to log in
@@ -40,16 +43,40 @@ export default function Login() {
   };
 
   const signInWithGoogle = async () => {
+    setError(""); // Reset error before trying
+    setIsChecking(true); // Indicate that a check is in progress
+
     try {
-      const user = await signInWithPopup(auth, provider);
-      console.log(user);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+  
+      // Query Firestore to check if the email exists
+      const usersRef = collection(db, "users"); // Replace "users" with your actual users collection
+      const q = query(usersRef, where("email", "==", user.email));
+      const querySnapshot = await getDocs(q);
+  
+      if (querySnapshot.empty) {
+        // Log the user out immediately
+        await signOut(auth);
+        setError("This email does not exist. Please register first.");
+
+        // Delay redirect to show error message
+        setTimeout(() => {
+        router.push("/register");
+        }, 3000); // 3-second delay
+      } else {
+        console.log("User logged in successfully:", user);
+      }
     } catch (error) {
       setError("An error occurred while signing in with Google.");
       console.error("An error occurred", error);
+    } finally {
+      setIsChecking(false); // Reset checking state
     }
+
   };
 
-  return isLoading || (!isLoading && authUser) ? <Loader /> : (
+  return isLoading || isChecking || (!isLoading && authUser) ? <Loader /> : (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-black via-black to-black">
       <div className="bg-white shadow-lg rounded-lg overflow-hidden flex max-w-4xl w-full">
         {/* Left side - image section */}

@@ -15,7 +15,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const {authUser, isLoading, setAuthUser} = useAuth();
-
+  const [error, setError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +44,16 @@ export default function Register() {
 
       console.log("User registered and data saved in Firestore:", user);
     } catch (error) {
-      console.log("An error occurred", error);
+      if (error.code === "auth/weak-password") {
+        setError("Password must be at least 6 characters long.");
+      } else if (error.code === "auth/email-already-in-use") {
+        setError("This email is already registered. Please use another email.");
+      } else if (error.code === "auth/invalid-email") {
+        setError("Invalid email format. Please check your email.");
+      } else {
+        console.error("An error occurred:", error);
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -129,6 +138,12 @@ export default function Register() {
                 placeholder="Enter your password"
               />
             </div>
+
+            {error && (
+            <div className="mt-4 text-red-500 border border-red-500 p-2 rounded">
+              {error}
+            </div>
+          )}
 
             <button
               type="submit"
