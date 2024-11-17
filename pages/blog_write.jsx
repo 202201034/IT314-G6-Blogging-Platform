@@ -34,6 +34,13 @@ export default function BlogEditor() {
             const draftData = draftDoc.data();
             setTitle(draftData.title || '');
             setContent(draftData.content || '');
+
+            // Remove only the first # at index 0 from each hashtag in the array
+            const hashtagContent = draftData.hashtags?.map((tag) =>
+              tag.startsWith('#') ? tag.slice(1) : tag
+              ) || [];
+            setHashtagInput(hashtagContent);
+
           } else {
             setError('Draft not found.');
           }
