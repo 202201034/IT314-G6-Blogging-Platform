@@ -5,6 +5,7 @@ import { Camera } from 'lucide-react';
 import { auth, db } from "../firebase/firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { useRouter } from 'next/router';
+import Loader from './components/Loader';
 
 const ProfileSetup = () => {
   const [imagePreview, setImagePreview] = useState(null);
@@ -14,6 +15,7 @@ const ProfileSetup = () => {
   const [location, setLocation] = useState("");
   const [interests, setInterests] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
 
   const router = useRouter();
 
@@ -47,7 +49,7 @@ const ProfileSetup = () => {
           bio,
           location,
           interests,
-          profileImage: imagePreview,
+          profilePicture: imagePreview,
         }, { merge: true });
 
         router.push('/');

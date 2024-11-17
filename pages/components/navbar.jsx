@@ -1,40 +1,83 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import logo from './logo.png';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faUser, faSearch, faBell } from '@fortawesome/free-solid-svg-icons';
 import Router from 'next/router';
-import { useAuth } from "/firebase/auth.js";
+import { useAuth } from '/firebase/auth.js';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db, auth } from '../../firebase/firebase';
+import { signOut } from 'firebase/auth';
 
 export default function Navbar() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationMenuOpen, setIsNotificationMenuOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const { authUser, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      Router.push('/');
+    } catch (error) {
+      console.error('Error signing out: ', error.message);
+    }
+  };
 
   const handleCreateBlogClick = () => {
     if (authUser) {
-      // If the user is authenticated, navigate to the blog write page
       Router.push('/blog_write');
     } else {
-      // If the user is not authenticated, navigate to the login page
       Router.push('/login');
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      Router.push("/");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
+  const handleProfileClick = () => {
+    Router.push('/profile');
   };
 
-  const navItems = [
-    { label: "Explore", href: "#" },
-    { label: "Pricing", href: "#" },
-  ];
+  const handleSearch = async (e) => {
+    if (!searchTerm) return;
+  
+    try {
+      console.log("Searching for:", searchTerm);
+  
+      // Query for users by username in the `users` collection
+      const userQuery = query(
+        collection(db, 'users'),
+        where('username', '>=', searchTerm),
+        where('username', '<=', searchTerm + '\uf8ff')
+      );
+      const userSnap = await getDocs(userQuery);
+      const users = userSnap.docs.map(doc => ({
+        id: doc.id,
+        username: doc.data().username,
+        type: 'user'
+      }));
+      console.log("Users found:", users);
+  
+      // Query for blogs by title in the `blogs` collection
+      const blogQuery = query(
+        collection(db, 'blogs'),
+        where('title', '>=', searchTerm),
+        where('title', '<=', searchTerm + '\uf8ff')
+      );
+      const blogSnap = await getDocs(blogQuery);
+      const blogs = blogSnap.docs.map(doc => ({
+        id: doc.id,
+        title: doc.data().title,
+        type: 'blog'
+      }));
+      console.log("Blogs found:", blogs);
+  
+      // Combine results from both queries
+      setSearchResults([...users, ...blogs]);
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+    }
+  };
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);
@@ -46,75 +89,87 @@ export default function Navbar() {
     setIsProfileMenuOpen(false);
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Implement search functionality here
-    console.log('Search submitted');
-  };
+  const navItems = [
+    { label: 'Explore', href: '#' },
+    { label: 'Pricing', href: '#' },
+  ];
 
   const handleSignIn = () => {
-    Router.push('../login');
+    Router.push('/login');
     setIsProfileMenuOpen(false);
   };
-  const handleProfileClick = () => {
-    Router.push('/profile'); // Redirect to the profile page
-  };
 
-  let navitem;
-  if(authUser){
-    navitem=(
-    <div  className="absolute right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg py-1 z-10 cursor-pointer">
-      <button onClick={handleProfileClick} className="block w-full px-4 py-2 text-sm text-white text-left hover:bg-neutral-700 focus:outline-none">
-        Profile
-      </button>
-      <button onClick={handleSignOut} className="block w-full px-4 py-2 text-sm text-white text-left hover:bg-neutral-700 focus:outline-none">
-        Sign Out
-      </button>
-
-    </div>);
-  }
-  else{
-    navitem=(
+  let profileMenu;
+  if (authUser) {
+    profileMenu = (
+      <div className="absolute right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg py-1 z-10 cursor-pointer">
+        <button onClick={handleProfileClick} className="block w-full px-4 py-2 text-sm text-white text-left hover:bg-neutral-700 focus:outline-none">
+          Profile
+        </button>
+        <button onClick={handleLogout} className="block w-full px-4 py-2 text-sm text-white text-left hover:bg-neutral-700 focus:outline-none">
+          Sign Out
+        </button>
+      </div>
+    );
+  } else {
+    profileMenu = (
       <div onClick={handleSignIn} className="absolute right-0 mt-2 w-48 bg-neutral-800 rounded-md shadow-lg py-1 z-10 cursor-pointer">
         <button className="block w-full px-4 py-2 text-sm text-white text-left hover:bg-neutral-700 focus:outline-none">
           Sign In
         </button>
-      </div>)
+      </div>
+    );
   }
 
+
+  useEffect(() => {
+    handleSearch();
+  }, [searchTerm]);
+
+
   return (
-    <nav className="sticky bg-black top-0 z-50 py-3 backdrop-blur-lg border-b border-neutral-700/80" >
+    <nav className="sticky bg-black top-0 z-50 py-3 backdrop-blur-lg border-b border-neutral-700/80">
       <div className="container px-4 mx-auto relative lg:text-sm">
         <div className="flex justify-between items-center">
           {/* Logo Section */}
           <Link href="/">
-          <div className="flex items-center flex-shrink-0">
-            <Image
-              src={logo}
-              alt="Logo"
-              width={70}
-              quality={100}
-              placeholder="blur"
-            />
-            <span className="text-2xl tracking-tight">blogX</span>
-          </div>
+            <div className="flex items-center flex-shrink-0">
+              <Image src={logo} alt="Logo" width={70} quality={100} placeholder="blur" />
+              <span className="text-2xl tracking-tight">blogX</span>
+            </div>
           </Link>
 
           {/* Search Field */}
-          <div className="hidden lg:flex flex-grow mx-4 max-w-xl">
-            <form onSubmit={handleSearch} className="w-full">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search Blog..."
-                  className="w-full py-2 pl-10 pr-4 text-white bg-neutral-700 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
-                </div>
+          <div className="hidden lg:flex flex-grow mx-4 max-w-xl relative">
+            <input
+              type="text"
+              placeholder="Search Blog..."
+              className="w-full py-2 pl-10 pr-4 text-white bg-neutral-700 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+              <FontAwesomeIcon icon={faSearch} className="text-gray-400" />
+            </div>
+
+            {/* Search Results Dropdown */}
+            {searchResults.length > 0 && (
+              <div className="absolute top-full left-0 w-full bg-neutral-800 rounded-md shadow-lg max-h-60 overflow-y-auto z-10 mt-1">
+                {searchResults.map((result) => (
+                  <div
+                    key={result.id}
+                    onClick={() => Router.push(result.type === 'user' ? `/profile/${result.username}` : `/blog/${result.id}`)}
+                    className="p-2 hover:bg-neutral-700 cursor-pointer"
+                  >
+                    <p className="text-sm text-white">
+                      {result.type === 'user' ? `User: ${result.username}` : `Blog: ${result.title}`}
+                    </p>
+                  </div>
+                ))}
               </div>
-            </form>
+            )}
           </div>
+
 
           {/* Nav Items */}
           <ul className="hidden lg:flex space-x-8 text-lg items-center">
@@ -123,7 +178,7 @@ export default function Navbar() {
                 <a href={item.href}>{item.label}</a>
               </li>
             ))}
-            {/* Notification Bell (only show if user is authenticated)*/}
+            {/* Notification Bell (only show if user is authenticated) */}
             {authUser && (
               <li className="relative">
                 <button onClick={toggleNotificationMenu} className="focus:outline-none">
@@ -136,11 +191,11 @@ export default function Navbar() {
                       {/* Example notifications */}
                       <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-neutral-700">New comment on your blog</a>
                       <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-neutral-700">You have a new follower</a>
-                      {/* Add more notifications as needed */}
                     </div>
                   </div>
-              )}
-            </li>)}
+                )}
+              </li>
+            )}
           </ul>
 
           {/* Create New Blog Button and Profile Icon */}
@@ -153,7 +208,7 @@ export default function Navbar() {
               <button onClick={toggleProfileMenu} className="focus:outline-none">
                 <FontAwesomeIcon icon={faUser} className="text-white hover:text-orange-500" />
               </button>
-              {isProfileMenuOpen && (navitem)}
+              {isProfileMenuOpen && profileMenu}
             </div>
           </div>
         </div>

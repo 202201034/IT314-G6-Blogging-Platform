@@ -38,8 +38,12 @@ export default function Register() {
 
       // Add user data to Firestore 'users' collection
       await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
         name: username,
         email: email,
+        followersCount: 0,       // Initialize followers count
+        followingCount: 0,      // Initialize following count
+
       });
 
       console.log("User registered and data saved in Firestore:", user);
@@ -71,6 +75,7 @@ export default function Register() {
         await setDoc(userDoc, {
           name: user.displayName,
           email: user.email,
+          uid: user.uid
         });
       }
 
