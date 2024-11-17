@@ -2,27 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import {
+import { 
   doc,
   getDoc,
   updateDoc,
   collection,
   query,
-  where,
-  getDocs,
-  setDoc,
+  where, 
+  getDocs, 
+  setDoc, 
   deleteDoc,
 } from "firebase/firestore";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
+import { 
+  ref, 
+  uploadBytes, 
+  getDownloadURL, 
   deleteObject,
 } from "firebase/storage";
 import { db, storage } from "../../firebase/firebase";
 import { auth } from "../../firebase/firebase";
 import { Camera } from 'lucide-react'; // Import Camera from react-feather
-
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -38,12 +38,14 @@ export default function ProfilePage() {
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [userDrafts, setUserDrafts] = useState([]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setCurrentUser(currentUser);
         try {
+          // Fetch user data
           const userDoc = await getDoc(doc(db, "users", currentUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
@@ -53,17 +55,25 @@ export default function ProfilePage() {
             setUsername(userData.username);
             setProfileImage(userData.profileImage || "");
 
+            // Fetch blogs by user
             const blogsQuery = query(
               collection(db, "blogs"),
-              where("userId", "==", currentUser.uid)
-            );
+               where("userId", "==", currentUser.uid)
+              );
             const blogsSnapshot = await getDocs(blogsQuery);
             const blogsData = blogsSnapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
+               id: doc.id, 
+               ...doc.data(),
+               }));
             setUserBlogs(blogsData);
 
+            // Fetch drafts by user (new query for drafts)
+            const draftsQuery = query(collection(db, 'drafts'), where('userId', '==', currentUser.uid));
+            const draftsSnapshot = await getDocs(draftsQuery);
+            const draftsData = draftsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setUserDrafts(draftsData);
+
+            // Get follower and following counts from the users table
             setFollowersCount(userData.followersCount || 0);
             setFollowingCount(userData.followingCount || 0);
           } else {
@@ -121,13 +131,13 @@ export default function ProfilePage() {
       const usernameAvailable = await checkUsernameAvailability(username);
       if (!usernameAvailable) {
         setError('Username is already taken.');
-        return;
-      }
 
-      // Remove old username from usernames collection if it exists
-      const oldUsername = user.username;
-      if (oldUsername) {
-        await deleteDoc(doc(db, 'usernames', oldUsername));
+        // Clear the error after 3 seconds
+        setTimeout(() => {
+        setError('');
+        }, 3000);
+        
+        return;
       }
 
       // Upload profile image if it has changed
@@ -144,10 +154,6 @@ export default function ProfilePage() {
         username, // Update username
       });
 
-      // Add new username to usernames collection
-      await setDoc(doc(db, 'usernames', username), {
-        uid: currentUserUid,
-      });
 
       setUser({ ...user, name, bio, profileImage: updatedProfileImage, username });
       setIsEditing(false);
@@ -169,7 +175,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-blue-200 p-8">
+    <div className="min-h-screen bg-blue-200 p-8" style={{ backgroundColor: '#f0f4f8' }}>
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
         {error && (
           <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md">
@@ -180,75 +186,93 @@ export default function ProfilePage() {
           <div className="space-y-8">
             {/* Header Section */}
             {!isEditing ? (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <span className="text-xl text-gray-700 font-normal">@{username}</span>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={handleEdit}
-                      className="bg-blue-500 text-white px-4 py-1 rounded-md"
-                    >
-                      Edit Profile
-                    </button>
-                  </div>
-                </div>
+  <>
+    <div className="flex justify-between items-center mb-6">
+      <span className="text-xl text-gray-700 font-normal">@{username}</span>
+      <div className="flex items-center space-x-3">
+        <button
+          onClick={handleEdit}
+          className="bg-blue-500 text-white px-4 py-1 rounded-md"
+        >
+          Edit Profile
+        </button>
+      </div>
+    </div>
 
-                {/* Profile Picture, Name, Bio, and Stats Section */}
-                <div className="flex items-start mb-8">
-                  <div className="flex-shrink-0">
-                    {profileImage ? (
-                      <img src={profileImage} alt="Profile" className="w-24 h-24 rounded-full border border-gray-200" />
-                    ) : (
-                      <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-400">No Image</span>
-                      </div>
-                    )}
-                    <div className="text-center mt-4">
-                      <span className="text-lg font-normal text-gray-800">{name}</span>
-                    </div>
-                    <div className="text-center mt-2 text-gray-500">
-                      <p>{bio || "............................."}</p>
-                    </div>
-                  </div>
+    {/* Profile Picture, Name, Bio, and Stats Section */}
+    <div className="flex items-start mb-8">
+      <div className="flex-shrink-0">
+        {profileImage ? (
+          <img src={profileImage} alt="Profile" className="w-24 h-24 rounded-full border border-gray-200" />
+        ) : (
+          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-400">No Image</span>
+          </div>
+        )}
+        <div className="text-center mt-4">
+          <span className="text-lg font-normal text-gray-800">{name}</span>
+        </div>
+        <div className="text-center mt-2 text-gray-500">
+          <p>{bio || "............................."}</p>
+        </div>
+      </div>
 
-                  {/* Stats - Centered Inline with Profile Picture */}
-                  <div className="flex-1 ml-8 flex justify-center items-center">
-                    <div className="flex space-x-12 text-center">
-                      <div>
-                        <div className="text-indigo-500 font-semibold text-lg">{userBlogs.length}</div>
-                        <div className="text-gray-600 text-sm">Blogs</div>
-                      </div>
-                      <div>
-                        <div className="text-indigo-500 font-semibold text-lg">{followingCount}</div>
-                        <div className="text-gray-600 text-sm">Following</div>
-                      </div>
-                      <div>
-                        <div className="text-indigo-500 font-semibold text-lg">{followersCount}</div>
-                        <div className="text-gray-600 text-sm">Followers</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      {/* Stats - Centered Inline with Profile Picture */}
+      <div className="flex-1 ml-8 flex justify-center items-center">
+        <div className="flex space-x-12 text-center">
+          <div>
+            <div className="text-indigo-500 font-semibold text-lg">{userBlogs.length}</div>
+            <div className="text-gray-600 text-sm">Blogs</div>
+          </div>
+          <div>
+            <div className="text-indigo-500 font-semibold text-lg">{followingCount}</div>
+            <div className="text-gray-600 text-sm">Following</div>
+          </div>
+          <div>
+            <div className="text-indigo-500 font-semibold text-lg">{followersCount}</div>
+            <div className="text-gray-600 text-sm">Followers</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-                {/* Blogs Section */}
-                <div className="w-full">
-                  <h2 className="text-xl font-medium text-gray-700 mb-6">Your Blogs</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {userBlogs.map((blog) => (
-                      <div key={blog.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                        <h3 className="text-lg font-medium text-gray-800 mb-2">{blog.title}</h3>
-                        <div className="text-gray-500 text-sm line-clamp-1 mb-6">
-                          {blog.content || "..................................."}
-                        </div>
-                        <div className="text-right">
-                          <a href={`/blog/${blog.id}`} className="text-indigo-600 text-sm">Read more</a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+    {/* Blogs Section */}
+    <div className="w-full">
+      <h2 className="text-xl font-medium text-gray-700 mb-6">Your Blogs</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {userBlogs.map((blog) => (
+          <div key={blog.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-800 mb-2">{blog.title}</h3>
+            <div className="text-gray-500 text-sm line-clamp-1 mb-6">
+              {blog.content || "..................................."}
+            </div>
+            <div className="text-right">
+              <a href={`/blog/${blog.id}`} className="text-indigo-600 text-sm">Read more</a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Drafts Section */}
+    <div className="w-full mt-8">
+      <h2 className="text-xl font-medium text-gray-700 mb-6">Your Drafts</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {userDrafts.map((draft) => (
+            <div key={draft.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-lg font-medium text-gray-800 mb-2">{draft.title}</h3>
+                <div className="text-gray-500 text-sm line-clamp-1 mb-6">
+                  {draft.content || "..................................."}
                 </div>
-              </>
-            ) : (
+              <div className="text-right">
+              <Link href={`/blog_write?draftId=${draft.id}`} className="text-indigo-600 text-sm">Continue editing</Link>
+              </div>
+            </div>
+          ))}
+        </div> 
+    </div>
+  </>
+        ) : (
               // Edit Profile Form
               <div className="space-y-6">
                 <div className="flex flex-col items-center space-y-4">
@@ -278,68 +302,61 @@ export default function ProfilePage() {
                     />
                     <label
                       htmlFor="profilePicture"
-                      className="absolute bottom-0 right-0 bg-blue-500 text-white p-2 rounded-full cursor-pointer group-hover:opacity-75"
+                      className="absolute bottom-0 right-0 bg-indigo-600 text-white p-2 rounded-full cursor-pointer hover:bg-indigo-700 transition-colors"
                     >
-                      Change
+                      <Camera className="w-4 h-4" />
                     </label>
                   </div>
+                </div>
 
-                  {/* Name, Bio, and Username Fields */}
-                  <div className="space-y-2 w-full">
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Name"
-                    />
-                    <textarea
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Bio"
-                      rows={3}
-                    />
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={async (e) => {
-                        const newUsername = e.target.value;
-                        setUsername(newUsername);
-                        const isAvailable = await checkUsernameAvailability(newUsername);
-                        setIsUsernameAvailable(isAvailable);
-                      }}
-                      className={`w-full px-4 py-2 border ${
-                        isUsernameAvailable ? "border-gray-300" : "border-red-500"
-                      } rounded-md focus:ring-indigo-500 focus:border-indigo-500`}
-                      placeholder="Username"
-                    />
-                    {!isUsernameAvailable && (
-                      <div className="text-red-500 text-sm">Username is not available</div>
-                    )}
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={async (e) => {
+                      const newUsername = e.target.value;
+                      setUsername(newUsername);
+                      const isAvailable = await checkUsernameAvailability(newUsername);
+                      setIsUsernameAvailable(isAvailable);
+                    }}
+                    className={`block w-full px-4 py-3 bg-gray-50 border ${isUsernameAvailable ? 'border-gray-300' : 'border-red-500'} rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black`}
+                    placeholder="Choose your username"
+                  />
+                  {!isUsernameAvailable && <p className="text-red-500">Username is taken.</p>}
+                </div>
 
-                  <div className="space-x-4">
-                    <button
-                      onClick={handleCancel}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={!isUsernameAvailable}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md disabled:bg-gray-400"
-                    >
-                      Save
-                    </button>
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    rows="4"
+                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black resize-none"
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+
+                {/* Save and Cancel Buttons */}
+                <div className="flex justify-between items-center mt-4">
+                  <button
+                    onClick={handleCancel}
+                    className="bg-gray-300 text-gray-700 px-4 py-1 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="bg-indigo-500 text-white px-4 py-1 rounded-md"
+                  >
+                    Save
+                  </button>
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="text-center text-gray-500">Loading...</div>
+          <p>Loading...</p>
         )}
       </div>
     </div>

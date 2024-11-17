@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
 import dynamic from 'next/dynamic';
-import Loader from "./components/Loader";
+import { useRouter, useSearchParams } from 'next/navigation';
 import { db, storage } from '../firebase/firebase';
-import { collection, addDoc } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc , doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL, } from 'firebase/storage';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -15,19 +15,47 @@ export default function BlogEditor() {
   const [content, setContent] = useState('');
   const [hashtagInput, setHashtagInput] = useState('');
   const [hashtags, setHashtags] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const draftId = searchParams.get('draftId'); // Get the draftId from the URL
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isSubmittingBlog, setIsSubmittingBlog] = useState(false);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const auth = getAuth();
+  const router = useRouter();
 
+  useEffect(() => {
+    const fetchDraft = async () => {
+      if (draftId) {
+        try {
+          const draftRef = doc(db, 'drafts', draftId);
+          const draftDoc = await getDoc(draftRef);
+
+          if (draftDoc.exists()) {
+            const draftData = draftDoc.data();
+            setTitle(draftData.title || '');
+            setContent(draftData.content || '');
+          } else {
+            setError('Draft not found.');
+          }
+        } catch (error) {
+          setError('Failed to fetch draft: ' + error.message);
+        }
+      }
+      
+    };
+
+    fetchDraft();
+  }, [draftId]);
+
+
+  
   const handleSubmit = async (e) => {
     e.preventDefault();  
-    setLoading(true);  // Start loading state
+    setIsSubmittingBlog(true);  
     setError('');
 
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      
+
       // Process content images before saving to Firestore
       const updatedContent = await processContentImages(content);
 
@@ -39,6 +67,12 @@ export default function BlogEditor() {
         timestamp: new Date(),
       });
 
+      if (draftId) {
+        // Delete the draft after publishing
+        const draftRef = doc(db, 'drafts', draftId);
+        await deleteDoc(draftRef);
+      }
+
       alert('Blog submitted successfully!');
       setTitle('');
       setContent('');
@@ -47,10 +81,89 @@ export default function BlogEditor() {
       console.error('Error submitting blog:', error);
       setError('Failed to submit blog. Please try again.');
     } finally {
-      setLoading(false); // Always stop loading state
+      setIsSubmittingBlog(false); // Always stop submitting state
     }
   };
 
+  const handleSaveDraft = async () => {
+
+  // Check for empty fields
+  if (!title.trim() && !content.trim() && hashtags.length === 0) {
+    setError('Cannot save an empty draft.');
+    
+    // Clear the error after 3 seconds
+    setTimeout(() => {
+      setError('');
+    }, 3000);
+    
+    return; // Exit function if validation fails
+  }
+
+    setIsSavingDraft(true);
+    setError('');
+
+    try {
+      const updatedContent = await processContentImages(content);
+
+      const draftData = {
+        title,
+        content: updatedContent,
+        hashtags,
+        userId: auth.currentUser.uid,
+        timestamp: new Date(),
+      };
+
+      if (draftId) {
+        // Update existing draft
+        const draftRef = doc(db, 'drafts', draftId);
+        await updateDoc(draftRef, draftData); // Use updateDoc instead of update
+        alert('Draft updated successfully!');
+      } else {
+        // Create new draft
+        await addDoc(collection(db, 'drafts'), draftData);
+        alert('Draft saved successfully!');
+      }
+      setTitle('');
+      setContent('');
+      setHashtags([]);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+        setError('Failed to save draft. Please try again.');
+      
+        // Clear the error after 3 seconds
+        setTimeout(() => {
+        setError('');
+        }, 3000);
+
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleDeleteDraft = async () => {
+    if (!draftId) return; // Safety check
+  
+    try {
+      const draftRef = doc(db, 'drafts', draftId);
+      await deleteDoc(draftRef);
+  
+      // Clear the editor and reset the draft state
+      setTitle('');
+      setContent('');
+      setHashtags([]);
+      router.push('/profile');
+      alert('Draft deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting draft:', error);
+      setError('Failed to delete draft. Please try again.');
+  
+      // Clear the error after 3 seconds
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    }
+  };
+  
   const processContentImages = async (htmlContent) => {
     const imgTagRegex = /<img[^>]+src="([^">]+)"/g;
     let match;
@@ -90,8 +203,8 @@ export default function BlogEditor() {
     setHashtags(hashtags.filter(hashtag => hashtag !== hashtagToRemove));
   };
 
-  if(isLoading) return <Loader />;
-  else{
+
+
   return (
     <div className="p-6 flex items-center justify-center" style={{ backgroundColor: '#e9f0f5' }}>
       <div className="pl-10 mx-auto">
@@ -166,20 +279,46 @@ export default function BlogEditor() {
               </div>
             </div>
 
+
+        <div className="flex justify-between items-center mt-4">
+          <div className="flex items-center space-x-2 mt-4">
             <button
-              type="submit"
+              type="button"
+              onClick={handleSaveDraft}
               className="px-4 py-2 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-0 focus:ring-transparent"
-              style={{ backgroundColor: '#008AFF' }}
-              disabled={loading} // Disable the button while loading
+              style={{ backgroundColor: '#28a745' }} // Green color for the "Save Draft" button
+              disabled={isSavingDraft}
             >
-              {loading ? 'Submitting...' : 'Publish Blog'}
+            {isSavingDraft ? 'Saving...' : 'Save Draft'}
             </button>
+                
+            {/* Conditionally Render Delete Draft Button */}
+            {draftId && (
+            <button
+              type="button"
+              onClick={handleDeleteDraft}
+              className="px-4 py-2 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-0 focus:ring-transparent"
+              style={{ backgroundColor: '#dc3545' }} // Red color for the "Delete Draft" button
+            >
+              Delete Draft
+            </button>
+            )}
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-0 focus:ring-transparent"
+            style={{ backgroundColor: '#008AFF' }} // Blue color for the "Publish Blog" button
+            disabled={isSubmittingBlog}
+          >
+          {isSubmittingBlog ? 'Submitting...' : 'Publish Blog'}
+          </button>
+        </div>
+
             {error && <p className="text-red-500">{error}</p>}
           </form>
       </div>
     </div>
   );
-  }
 }
 
 const modules = {
