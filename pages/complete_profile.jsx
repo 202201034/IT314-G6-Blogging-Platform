@@ -49,7 +49,7 @@ const ProfileSetup = () => {
           bio,
           location,
           interests,
-          profilePicture: imagePreview,
+          profileImage: imagePreview,
         }, { merge: true });
 
         router.push('/');
