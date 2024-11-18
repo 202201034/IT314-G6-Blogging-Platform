@@ -1,6 +1,8 @@
 import styles from '../../styles/showBlog.module.css';
-import { HeartOutlined, ShareAltOutlined, BookOutlined } from '@ant-design/icons';
+
+// libraries for like,share,... icon
 import { FaHeart, FaBookmark, FaEllipsisV } from 'react-icons/fa';
+import { HeartIcon, ShareIcon, BookmarkIcon } from '@heroicons/react/outline';
 
 
 // can use this after like = {red heart}
@@ -58,6 +60,7 @@ const showBlog = () => {
 
     return (
         <div className={styles.blogContainer}>
+
             {/* scrollable section */}
             <div className={styles.leftSection}>
                 <div className={styles.blogSection}>
@@ -124,43 +127,35 @@ const showBlog = () => {
                     </div>
 
                     {/* Blog Footer like share save other option */}
-                    {/* Like icon */}
                     <div className={styles.likeSave}>
+                        {/* Like icon */}
                         <button
-                            style={{
-                                border: 'white',
-                                cursor: 'pointer',
-                                fontSize: '32px',
-                            }}
+                            // className="p-2 bg-transparent border-2 border-white rounded-full hover:bg-white hover:text-gray-600"
+                            aria-label="Like"
                             onClick={handleLike}
                         >
-                            <HeartOutlined />
+                            <HeartIcon className="h-9 w-9 text-white" />
                         </button>
 
+                        {/* count a blogLike */}
                         <p>{likeCount} likes</p>
 
                         {/* Share icon */}
                         <button
-                            style={{
-                                border: 'white',
-                                cursor: 'pointer',
-                                fontSize: '32px',
-                            }}
+                            // className="p-2 bg-transparent border-2 border-white rounded-full hover:bg-white hover:text-gray-600"
+                            aria-label="Share"
                             onClick={handleShare}
                         >
-                            <ShareAltOutlined />
+                            <ShareIcon className="h-8 w-8 text-white" />
                         </button>
 
                         {/* Save icon */}
                         <button
-                            style={{
-                                border: 'white',
-                                cursor: 'pointer',
-                                fontSize: '32px',
-                            }}
+                            // className="p-2 bg-transparent border-2 border-white rounded-full hover:bg-white hover:text-gray-600"
+                            aria-label="Bookmark"
                             onClick={handleSave}
                         >
-                            <BookOutlined />
+                            <BookmarkIcon className="h-8 w-8 text-white" />
                         </button>
                     </div>
 
@@ -176,7 +171,9 @@ const showBlog = () => {
                     >
                         <FaEllipsisV />
                     </button>
+
                 </div>
+
             </div>
         </div>
     );
