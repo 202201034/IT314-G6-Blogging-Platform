@@ -17,11 +17,13 @@ export default function BlogEditor() {
   const [hashtags, setHashtags] = useState([]);
   const searchParams = useSearchParams();
   const draftId = searchParams.get('draftId'); // Get the draftId from the URL
+  const blogId = searchParams.get('blogId');
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmittingBlog, setIsSubmittingBlog] = useState(false);
   const [error, setError] = useState('');
   const auth = getAuth();
   const router = useRouter();
+
 
   useEffect(() => {
     const fetchDraft = async () => {
@@ -54,7 +56,41 @@ export default function BlogEditor() {
     fetchDraft();
   }, [draftId]);
 
+  // Edit Blog
 
+  useEffect(() => {
+    const fetchBlog = async () => {
+      
+      if (blogId) {
+        try {
+          console.log("Fetching blog with ID:", blogId);
+          const blogRef = doc(db, 'blogs', blogId);
+          const blogDoc = await getDoc(blogRef);
+  
+          if (blogDoc.exists()) {
+            const blogData = blogDoc.data();
+            console.log("Fetched Blog Data:", blogData);
+  
+            // Safely set state to avoid null/undefined errors
+            setTitle(blogData.title || '');
+            console.log("Fetched Blog Data:", blogData);
+
+            setContent(blogData.content || ''); // Ensure this is correctly set
+          } else {
+            console.error('No blog found with the given ID.');
+            setError('Blog not found.');
+          }
+        } catch (error) {
+          console.error('Error fetching blog:', error);
+          setError('Failed to fetch blog: ' + error.message);
+        }
+      } else {
+        console.warn("No blogId provided in query parameters.");
+      }
+    };
+  
+    fetchBlog();
+  }, [blogId]);
   
   const handleSubmit = async (e) => {
     e.preventDefault();  
@@ -66,13 +102,24 @@ export default function BlogEditor() {
       // Process content images before saving to Firestore
       const updatedContent = await processContentImages(content);
 
-      await addDoc(collection(db, 'blogs'), {
+      const blogData = {
         title,
-        content: updatedContent, // Save content with Firebase image URLs
+        content: updatedContent,
         hashtags,
         userId: auth.currentUser.uid,
         timestamp: new Date(),
-      });
+      };
+
+      if (blogId) {
+        // Update existing blog
+        const blogRef = doc(db, 'blogs', blogId);
+        await updateDoc(blogRef, blogData);
+        alert('Blog updated successfully!');
+      } else {
+          // Create a new blog
+          await addDoc(collection(db, 'blogs'), blogData);
+          alert('Blog submitted successfully!');
+        }
 
       if (draftId) {
         // Delete the draft after publishing
@@ -80,7 +127,6 @@ export default function BlogEditor() {
         await deleteDoc(draftRef);
       }
 
-      alert('Blog submitted successfully!');
       setTitle('');
       setContent('');
       setHashtags([]);
@@ -232,7 +278,7 @@ export default function BlogEditor() {
                 className="w-full px-4 py-2 bg-transparent rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-transparent sm:text-4xl"
                 placeholder="Title"
                 rows = "1"
-                resize = "none"
+                style={{ resize: 'none', width: '100%' }}
                 required
               />
             </div>
@@ -289,7 +335,7 @@ export default function BlogEditor() {
 
         <div className="flex justify-between items-center mt-4">
           <div className="flex items-center space-x-2 mt-4">
-            <button
+            { !blogId && (<button
               type="button"
               onClick={handleSaveDraft}
               className="px-4 py-2 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-0 focus:ring-transparent"
@@ -298,6 +344,7 @@ export default function BlogEditor() {
             >
             {isSavingDraft ? 'Saving...' : 'Save Draft'}
             </button>
+            )}
                 
             {/* Conditionally Render Delete Draft Button */}
             {draftId && (
@@ -317,7 +364,7 @@ export default function BlogEditor() {
             style={{ backgroundColor: '#008AFF' }} // Blue color for the "Publish Blog" button
             disabled={isSubmittingBlog}
           >
-          {isSubmittingBlog ? 'Submitting...' : 'Publish Blog'}
+          {isSubmittingBlog ? (blogId ? 'Saving Changes...' : 'Publishing...') : (blogId ? 'Save Changes' : 'Publish Blog')}
           </button>
         </div>
 
