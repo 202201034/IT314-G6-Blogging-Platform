@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { db, storage } from '../firebase/firebase';
 import { collection, addDoc , doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL, } from 'firebase/storage';
+import 'react-quill/dist/quill.bubble.css';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -24,6 +25,11 @@ export default function BlogEditor() {
   const auth = getAuth();
   const router = useRouter();
 
+    //Quill Bubble Editor
+    const handleTitleChange = (value) => {
+      // Strip any block-level formatting like headers
+      setTitle(value);
+    };
 
   useEffect(() => {
     const fetchDraft = async () => {
@@ -38,10 +44,8 @@ export default function BlogEditor() {
             setContent(draftData.content || '');
 
             // Remove only the first # at index 0 from each hashtag in the array
-            const hashtagContent = draftData.hashtags?.map((tag) =>
-              tag.startsWith('#') ? tag.slice(1) : tag
-              ) || [];
-            setHashtagInput(hashtagContent);
+            const hashtagContent = draftData.hashtags;
+            setHashtags(hashtagContent);
 
           } else {
             setError('Draft not found.');
@@ -76,6 +80,10 @@ export default function BlogEditor() {
             console.log("Fetched Blog Data:", blogData);
 
             setContent(blogData.content || ''); // Ensure this is correctly set
+
+            const hashtagContent = blogData.hashtags;
+            setHashtags(hashtagContent);
+
           } else {
             console.error('No blog found with the given ID.');
             setError('Blog not found.');
@@ -264,22 +272,13 @@ export default function BlogEditor() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="p-6 mx-auto justify-center bg-black rounded-md">
             <div>
-              <textarea
-                type="text"
-                id="title"
+            <ReactQuill
+                theme="bubble"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onInput={(e) => {
-                  // Reset height to auto to get the new scroll height
-                  e.target.style.height = 'auto';
-                  // Setting the height to the scroll height to allow vertical expansion
-                  e.target.style.height = `${e.target.scrollHeight}px`;
-                }}
-                className="w-full px-4 py-2 bg-transparent rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-transparent sm:text-4xl"
+                onChange={handleTitleChange}
+                className="bubble-editor"
                 placeholder="Title"
-                rows = "1"
-                style={{ resize: 'none', width: '100%' }}
-                required
+                modules={bubbleModules}
               />
             </div>
 

@@ -57,8 +57,8 @@ const showBlog = ({ blog,username }) => {
     }
 
     const name = 'name';
-    const blogTitle = 'First Blog';
-    const blogContent = 'Hello, my name is user\nDA-IICT\nHello, my name is user\nDA-IICT\nHello, my name is user\nDA-IICT\nHello, my name is user\nDA-IICT\nHello, my name is user\nDA-IICT\n';
+    const blogTitle = blog.title;
+    const blogContent = blog.content;
     const likeCount = 0;
     const blogId = blog.id;
 
@@ -119,6 +119,17 @@ const showBlog = ({ blog,username }) => {
                     <p className={styles.blogContent}>
                         {blogContent}
                     </p>
+
+                    {/* Render hashtags */}
+                        {blog.hashtags && blog.hashtags.length > 0 && (
+                        <div className="mt-5">
+                            {blog.hashtags.map((tag, index) => (
+                                <span key={index} className="bg-gray-200 text-gray-800 px-4 py-2 mt-2 rounded-full text-sm font-semibold">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
 
                     {currentUser === blog.userId && (
                         <button onClick={() => router.push(`/blog_write?blogId=${blog.id}`)}

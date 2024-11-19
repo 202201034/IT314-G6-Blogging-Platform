@@ -33,7 +33,7 @@
     min-width: 60px;
     font-size: 20px;
 
-    margin-bottom: 250px;
+    margin-bottom: 340px;
     caret-color: #ffffff; 
 }
 
@@ -60,9 +60,98 @@
 
 /* Customize placeholder styles */
 .ql-editor.ql-blank::before {
-    color: #999;               /* Placeholder text color */
+    color: #999 !important;               /* Placeholder text color */
 }
 
 .textArea {
     width: 100%;
+}
+
+//CSS for bubble toolbar
+.bubble-editor .ql-editor {
+    width: 100% ;
+    padding-left: 1rem ;
+    padding-right: 1rem ;
+    padding-top: 0px ;
+    padding-bottom: 0.5rem ;
+    margin-bottom: 0px;
+    margin-top: 0px;
+    background-color: transparent;
+    border-radius: 0.375rem ;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) ;
+    outline: none ;
+    border-color: transparent ;
+    font-size: 20px;
+}
+
+.bubble-editor .ql-editor.ql-blank::before {
+    color: #999;               /*Placeholder text color*/        
+    font-style: normal !important;/* Italic style for placeholder */
+    /* font-size: 20px;           Font size */
+    background-color: transparent;
+    padding-left: 10px;
+}
+
+.bubble-editor .ql-editor:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: transparent;
+}
+
+@media (min-width: 640px) {
+    .bubble-editor .ql-editor {
+      font-size: 2.3rem;
+    }
+}
+
+.bubble-editor .ql-bubble .ql-tooltip {
+    z-index: 10;
+    position: relative;
+    max-width: 216px;
+    background-color: #333;
+    border-radius: 25px;  /* Increased border radius for pill shape */
+    left: auto !important; /* Override left */
+    top: auto !important;  /* Override top */
+    width: auto !important; /* Reset width */
+    
+}
+
+.bubble-editor .ql-bubble .ql-tooltip:not(.ql-hidden) {
+    display: flex;  /* Use flex to align items */
+    align-items: center;  /* Center items vertically */
+    transform: translateY(-100%);
+    margin-top: -50px;
+    margin-left: 40px;
+    
+}
+
+.bubble-editor .ql-bubble .ql-toolbar {
+    background-color: #333;
+    border-radius: 25px;  /* Match parent's border radius */
+    padding: 0px;  /* Add some padding around the buttons */
+  }
+
+.bubble-editor .ql-bubble .ql-toolbar button {
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+    margin: 0 2px;  /* Add some space between buttons */
+    background: transparent;  /* Remove black background */
+}
+
+.bubble-editor .ql-bubble .ql-toolbar button:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);  /* Subtle hover effect */
+    border-radius: 4px;  /* Rounded corners on hover */
+  }
+
+
+
+.bubble-editor .ql-container {
+    overflow: visible;
+  }
+
+.bubble-editor .ql-tooltip-arrow {
+    display: none !important;/* Or your custom styles */
 }
