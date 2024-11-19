@@ -65,14 +65,19 @@
     border-radius: 8px;
 }
 
-.authorName {
-    margin-left: 10px;
-}
-
 .authorInfo {
     display: flex;
     align-items: center;
+    margin-bottom: 20px;
+    justify-content: space-between;
 }
+
+.authorInfo > div {
+    width: 64px; /* Set the width of the profile image container */
+    margin-right: 10px;
+}
+
+
 
 .authorAvatar {
     font-size: 3rem;
@@ -81,6 +86,10 @@
 
 .authorDetails p {
     margin: 0;
+
+}
+.authorName {
+    margin-left: 10px;
 }
 
 .btnSection {

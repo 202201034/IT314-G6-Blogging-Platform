@@ -41,6 +41,7 @@ const CommentForm = ({ blogId, parentId = null }) => {
             username: username,  // Use the fetched username
             timestamp: Timestamp.now(),
             parentId,  // If it's a reply, it will be set as the parent comment's ID
+            userId: auth.currentUser.uid,
           });
       
           setContent("");  // Clear the input field after submission

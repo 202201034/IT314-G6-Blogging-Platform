@@ -23,6 +23,7 @@ import { db, storage } from "../../firebase/firebase";
 import { auth } from "../../firebase/firebase";
 import { Camera } from 'lucide-react'; // Import Camera from react-feather
 import Link from 'next/link';
+import { useRouter } from "next/router";
 
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -39,6 +40,7 @@ export default function ProfilePage() {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [userDrafts, setUserDrafts] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -174,6 +176,10 @@ export default function ProfilePage() {
     setImageFile(null); // Reset image file when canceling
   };
 
+  const handleroute = (blogid) => {
+    router.push(`/blog/${blogid}`);
+  }
+
   return (
     <div className="min-h-screen bg-blue-200 p-8" style={{ backgroundColor: '#f0f4f8' }}>
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
@@ -241,15 +247,15 @@ export default function ProfilePage() {
       <h2 className="text-xl font-medium text-gray-700 mb-6">Your Blogs</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {userBlogs.map((blog) => (
-          <div key={blog.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-800 mb-2">{blog.title}</h3>
-            <div className="text-gray-500 text-sm line-clamp-1 mb-6">
-              {blog.content || "..................................."}
-            </div>
-            <div className="text-right">
-              <a href={`/blog/${blog.id}`} className="text-indigo-600 text-sm">Read more</a>
-            </div>
-          </div>
+          <button key={blog.id} 
+          onClick={() => handleroute(blog.id)} // Navigate to the blog page
+          className = "bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-md transition-transform transform hover:scale-105 hover:shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-600">
+            <h3 className="text-lg font-medium text-gray-800 mb-2"
+            dangerouslySetInnerHTML={{
+                    __html: blog.title, // Assume content is HTML stored in the database
+                }}
+              />
+          </button>
         ))}
       </div>
     </div>

@@ -10,6 +10,8 @@ import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
 import Loader from '../components/Loader';
 import CommentsSection from '../comment_section';
+import DOMPurify from 'dompurify';
+import Image from 'next/image';
 
 // can use this after like = {red heart}
 
@@ -29,7 +31,7 @@ import CommentsSection from '../comment_section';
 // </button>
 
 
-const showBlog = ({ blog,username }) => {
+const showBlog = ({ blog,username,profileImage }) => {
 
     const router = useRouter();
     const [currentUser, setCurrentUser] = useState(null);
@@ -81,6 +83,9 @@ const showBlog = ({ blog,username }) => {
 
     };
     
+    const sanitizedContent = typeof window !== "undefined" ? DOMPurify.sanitize(blog.content) : blog.content;
+    
+    
     const handleDeleteBlog = async () => {
         console.log('handleDeleteBlog is called');
         if (!blogId) return; // Safety check
@@ -113,12 +118,18 @@ const showBlog = ({ blog,username }) => {
             {/* scrollable section */}
             <div className={styles.leftSection}>
                 <div className={styles.blogSection}>
-                    <h1 className={styles.blogTitle}>
-                        {blogTitle}
-                    </h1>
-                    <p className={styles.blogContent}>
-                        {blogContent}
-                    </p>
+                    <h1 className={styles.blogTitle}
+                dangerouslySetInnerHTML={{
+                    __html: blog.title, // Assume content is HTML stored in the database
+                }}
+                    />
+                    <div
+                className="ql-editor"
+                dangerouslySetInnerHTML={{
+                    __html: blog.content, // Assume content is HTML stored in the database
+                }}
+            />
+
 
                     {/* Render hashtags */}
                         {blog.hashtags && blog.hashtags.length > 0 && (
@@ -157,13 +168,23 @@ const showBlog = ({ blog,username }) => {
             {/* Static Section */}
             <div className={styles.rightSection}>
                 <div className={styles.aboutBlog}>
-                    <div className={styles.authorName}>
-                        <h2>Author</h2>
-                    </div>
+
                     <div className={styles.authorInfo}>
-                        <div className={styles.authorAvatar}>
-                            👤
-                        </div>
+                    {profileImage
+                     ? (
+                        <div style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
+                        <Image
+                            src={profileImage}  // URL of the profile picture
+                            alt="Author's Avatar"
+                            layout="fill"  // Scales to fill the parent container
+                            objectFit="cover"  // Maintains aspect ratio while filling
+                        />
+                    </div>
+                    
+                  
+                ) : (
+                    <span></span>  // Fallback if profile picture is not available
+                )}
                         <div className={styles.authorDetails}>
                             <p>@{username}</p>
                         </div>
@@ -236,37 +257,42 @@ const showBlog = ({ blog,username }) => {
         // Fetch the blog document from Firestore
         const docRef = doc(db, "blogs", params.id);
         const docSnap = await getDoc(docRef);
-      
+    
         if (!docSnap.exists()) {
-          return {
-            notFound: true, // Show a 404 page if the blog doesn't exist
-          };
+            return {
+                notFound: true, // Show a 404 page if the blog doesn't exist
+            };
         }
-      
+    
         const blogData = docSnap.data();
-        const userRef = doc(db, 'users', blogData.userId);  // Get the user document by author/userId
+        
+        // Fetch user details using the userId from the blog data
+        const userRef = doc(db, 'users', blogData.userId);  // Get the user document by userId
         const userSnapshot = await getDoc(userRef);
-  
+        
         let username = '';
+        let profileImage = ''; // Declare a variable to hold the author's profile image
         if (userSnapshot.exists()) {
             username = userSnapshot.data().username;  // Get the username from the user document
+            profileImage = userSnapshot.data().profileImage || ''; // Get the author's profile image URL
         }
     
         // Convert the Firestore timestamp to a string
         const blog = {
-          id: params.id,
-          ...blogData,
-          timestamp: blogData.timestamp ? blogData.timestamp.toDate().toISOString() : null,
+            id: params.id,
+            ...blogData,
+            timestamp: blogData.timestamp ? blogData.timestamp.toDate().toISOString() : null,
         };
-    
     
         return {
             props: {
-              blog,
-              username
+                blog,
+                username,
+                profileImage, // Pass the profileImage to the component
             },
             revalidate: 10, // Revalidate at most every 10 seconds
         };
     }
+    
 
 export default showBlog;

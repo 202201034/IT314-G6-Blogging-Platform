@@ -332,7 +332,7 @@ export default function BlogEditor() {
             </div>
 
 
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-between items-center mt-10 mb-40">
           <div className="flex items-center space-x-2 mt-4">
             { !blogId && (<button
               type="button"

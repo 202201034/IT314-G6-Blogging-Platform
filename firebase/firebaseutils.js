@@ -3,6 +3,34 @@ import { db } from './firebase';
 
 
 import { getAuth } from "firebase/auth";
+const fetchUserDetails = async (userId) => {
+    try {
+        // Get a reference to the user's document in the 'users' collection
+        const userRef = doc(db, "users", userId);
+        
+        // Fetch the user document
+        const userDoc = await getDoc(userRef);
+        
+        if (!userDoc.exists()) {
+            throw new Error("User not found");
+        }
+        
+        // Extract the user data (username, profileImage, etc.)
+        const userData = userDoc.data();
+        console.log(userData);
+        // Return the user details including profile image
+        return {
+            username: userData.username,
+            profileImage: userData.profileImage || null,  // Handle case where profileImage might be null
+        };
+    } catch (error) {
+        console.error("Error fetching user details:", error);
+        return null;  // In case of an error, return null
+    }
+};
+
+export default fetchUserDetails;
+
 
 export const isLoggedIn = () => {
   const auth = getAuth();

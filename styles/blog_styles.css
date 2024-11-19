@@ -42,14 +42,14 @@
 .ql-editor {
     background-color: transparent; /* Set background color to black */
     color: #ffffff; 
-    padding-bottom: 100px; /* Add padding only to the bottom */
-    //padding-left: 0;  /* Remove left padding */
+    padding-bottom: 0px; /* Add padding only to the bottom */
+    padding-left: 0;  /* Remove left padding */
     padding-right: 0; /* Remove right padding */
     padding-top: 5;   /* Remove top padding */
     min-width: 60px;
     font-size: 20px;
 
-    margin-bottom: 340px;
+    margin-bottom: 300px;
     caret-color: #ffffff; 
 }
 
@@ -83,7 +83,6 @@
     width: 100%;
 }
 
-//CSS for bubble toolbar
 
 .bubble-editor .ql-editor.ql-blank::before {
     color: #999;               /*Placeholder text color*/        
@@ -153,4 +152,24 @@
 
 .bubble-editor .ql-tooltip-arrow {
     display: none !important;/* Or your custom styles */
+}
+
+.blogContent {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333; /* Example color */
+}
+
+.blogContent h1 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.blogContent p {
+    margin-bottom: 1rem;
+}
+
+.blogContent a {
+    color: blue;
+    text-decoration: underline;
 }

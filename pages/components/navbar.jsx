@@ -44,7 +44,7 @@ export default function Navbar() {
     try {
       console.log("Searching for:", searchTerm);
   
-      // Query for users by username in the `users` collection
+      // Query for users by username
       const userQuery = query(
         collection(db, 'users'),
         where('username', '>=', searchTerm),
@@ -54,11 +54,13 @@ export default function Navbar() {
       const users = userSnap.docs.map(doc => ({
         id: doc.id,
         username: doc.data().username,
+        profileImage: doc.data().profileImage || '/default-avatar.png', // Default profile picture
         type: 'user'
       }));
+  
       console.log("Users found:", users);
   
-      // Query for blogs by title in the `blogs` collection
+      // Query for blogs by title
       const blogQuery = query(
         collection(db, 'blogs'),
         where('title', '>=', searchTerm),
@@ -70,14 +72,16 @@ export default function Navbar() {
         title: doc.data().title,
         type: 'blog'
       }));
+  
       console.log("Blogs found:", blogs);
   
-      // Combine results from both queries
+      // Combine results
       setSearchResults([...users, ...blogs]);
     } catch (error) {
       console.error("Error fetching search results:", error);
     }
   };
+  
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);
@@ -154,20 +158,40 @@ export default function Navbar() {
 
             {/* Search Results Dropdown */}
             {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 w-full bg-neutral-800 rounded-md shadow-lg max-h-60 overflow-y-auto z-10 mt-1">
-                {searchResults.map((result) => (
-                  <div
-                    key={result.id}
-                    onClick={() => Router.push(result.type === 'user' ? `/profile/${result.username}` : `/blog/${result.id}`)}
-                    className="p-2 hover:bg-neutral-700 cursor-pointer"
-                  >
-                    <p className="text-sm text-white">
-                      {result.type === 'user' ? `User: ${result.username}` : `Blog: ${result.title}`}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="absolute top-full left-0 w-full bg-neutral-800 rounded-md shadow-lg max-h-60 overflow-y-auto z-10 mt-1">
+              {searchResults.map((result) => (
+                <div
+                  key={result.id}
+                  onClick={() => {
+                    setSearchTerm(''); // Clear search input
+                    setSearchResults([]);
+                    Router.push(result.type === 'user' ? `/profile/${result.username}` : `/blog/${result.id}`);
+                  }}
+                  className="flex items-center p-2 hover:bg-neutral-700 cursor-pointer"
+                >
+                  {result.type === 'user' && (
+                      <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center mr-2">
+
+
+                    <Image
+                      src={result.profileImage}
+                      alt={result.username}
+                      width={32}
+                      height={32}
+                      quality={100}
+                      className="object-cover object-center w-full h-full "
+
+                    />
+                    </div>
+                  )}
+                  <p className="text-sm text-white">
+                    {result.type === 'user' ? `${result.username}` : `Blog: ${result.title}`}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
           </div>
 
 
