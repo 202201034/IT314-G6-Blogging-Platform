@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
 import Loader from '../components/Loader';
+import CommentsSection from '../comment_section';
 
 // can use this after like = {red heart}
 
@@ -28,7 +29,7 @@ import Loader from '../components/Loader';
 // </button>
 
 
-const showBlog = ({ blog }) => {
+const showBlog = ({ blog,username }) => {
 
     const router = useRouter();
     const [currentUser, setCurrentUser] = useState(null);
@@ -48,8 +49,6 @@ const showBlog = ({ blog }) => {
         }
         });
 
-    // console.log("Blog Id: ",blog.id);
-
         return () => unsubscribe();
     }, []);
 
@@ -57,19 +56,6 @@ const showBlog = ({ blog }) => {
         return <Loader />;
     }
 
-    if (currentUser !== null) {
-        if (currentUser === blog.userId) {
-        console.log('I am the author');
-        } else {
-        console.log('You are not the author');
-        console.log("Current User: ",currentUser);
-        console.log(blog.authorId);
-        }
-    } else {
-        console.log('Checking authentication status...');
-    }
-
-    const userName = 'userName';
     const name = 'name';
     const blogTitle = 'First Blog';
     const blogContent = 'Hello, my name is user\nDA-IICT\nHello, my name is user\nDA-IICT\nHello, my name is user\nDA-IICT\nHello, my name is user\nDA-IICT\nHello, my name is user\nDA-IICT\n';
@@ -121,14 +107,6 @@ const showBlog = ({ blog }) => {
         }
     };
 
-    const comments = [
-        { user: "user1", comment: "comment1" },
-        { user: "user2", comment: "comment2" },
-        { user: "user3", comment: "comment3" },
-        { user: "user4", comment: "comment4" },
-        { user: "user5", comment: "comment5" },
-    ];
-
     return (
         <div className={styles.blogContainer}>
 
@@ -176,8 +154,7 @@ const showBlog = ({ blog }) => {
                             👤
                         </div>
                         <div className={styles.authorDetails}>
-                            <p>@{userName}</p>
-                            <p>{name}</p>
+                            <p>@{username}</p>
                         </div>
                         <div className={styles.btnSection}>
                             <button className={styles.followBtn}>
@@ -188,33 +165,7 @@ const showBlog = ({ blog }) => {
 
                     {/* Comments Section */}
                     <div className={styles.commentsSection}>
-                        <div className={styles.barSection}>
-                            {comments.map((item, index) => (
-                                <div key={index} className={styles.commentInfo}>
-                                    <div className={styles.cntAvatar}>
-                                        👤
-                                    </div>
-                                    <div className={styles.comment}>
-                                        <p className={styles.uName}>
-                                            @{item.user}
-                                        </p>
-                                        <p className={styles.uComment}>
-                                            {item.comment}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Comment Input */}
-                        <div className={styles.commentInput}>
-                            <input type="text" placeholder="Comment..." />
-                            <button className={styles.sendBtn}
-                                onClick={handleCommentSend}
-                            >
-                                send
-                            </button>
-                        </div>
+                        <CommentsSection blogId={blog.id} />
                     </div>
 
                     {/* Blog Footer like share save other option */}
@@ -250,19 +201,6 @@ const showBlog = ({ blog }) => {
                         </button>
                     </div>
 
-                    {/* Dot icon */}
-                    <button
-                        style={{
-                            border: 'white',
-                            cursor: 'pointer',
-                            fontSize: '28px',
-                            marginTop: '15px',
-                        }}
-                        onClick={handleDotBtn}
-                    >
-                        <FaEllipsisV />
-                    </button>
-
                 </div>
 
             </div>
@@ -295,6 +233,13 @@ const showBlog = ({ blog }) => {
         }
       
         const blogData = docSnap.data();
+        const userRef = doc(db, 'users', blogData.userId);  // Get the user document by author/userId
+        const userSnapshot = await getDoc(userRef);
+  
+        let username = '';
+        if (userSnapshot.exists()) {
+            username = userSnapshot.data().username;  // Get the username from the user document
+        }
     
         // Convert the Firestore timestamp to a string
         const blog = {
@@ -307,6 +252,7 @@ const showBlog = ({ blog }) => {
         return {
             props: {
               blog,
+              username
             },
             revalidate: 10, // Revalidate at most every 10 seconds
         };
