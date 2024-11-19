@@ -387,3 +387,12 @@ const modules = {
     ['clean']
   ],
 };
+
+const bubbleModules = {
+  toolbar: [
+    ['bold', 'italic', 'underline','strike',{ 'header': 1 }, { 'header': 2 }], // Inline formatting options
+  ],
+  clipboard: {
+    matchVisual: false // Prevents extra spacing on paste
+  },
+};
