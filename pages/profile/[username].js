@@ -109,7 +109,7 @@ export default function ProfilePage() {
         // Update local state after following
         setIsFollowing(true); // Now user is following
         setFollowersCount(followersCount + 1); // Increment followers count
-        setFollowingCount(followingCount + 1); // Increment following count
+        setFollowingCount(followingCount); // Increment following count
       } catch (err) {
         setError(`Error following user: ${err.message}`);
       }
@@ -127,7 +127,7 @@ export default function ProfilePage() {
       // Update local state after unfollowing
       setIsFollowing(false); // Now user is not following
       setFollowersCount(followersCount - 1); // Decrement followers count
-      setFollowingCount(followingCount - 1); // Decrement following count
+      setFollowingCount(followingCount); // Decrement following count
       setShowUnfollowConfirm(false); // Close the confirmation box
     } catch (err) {
       setError(`Error unfollowing user: ${err.message}`);
