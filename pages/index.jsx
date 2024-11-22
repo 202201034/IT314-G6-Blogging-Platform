@@ -1,8 +1,37 @@
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import styles from '../styles/Home.module.css';
+import Router from 'next/router';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+import { useAuth } from '/firebase/auth.js';
+
 
 export default function Home() {
+  const { authUser, signOut } = useAuth();
+  
+  useEffect(() => {
+
+    AOS.init({
+      duration: 1000, // Animation duration in milliseconds
+      easing: 'ease-in-out', // Animation easing
+      once: false, // Set to false to allow repeated animations
+    });
+
+  }, []);
+
+  const handleCreateBlogClick = () => {
+
+    if (authUser) {
+      Router.push('/blog_write');
+    } else {
+      Router.push('/login');
+    }
+  };
+
+
+
   return (
     <div className={styles.container}>
       {/*Header Section*/}
@@ -15,12 +44,18 @@ export default function Home() {
       <div className={styles.headerImageWrapper}>
         <div className={styles.overlay}>
           <div className={styles.overlayText}>
-          <p className={styles.headerSubtext}>
+          <p 
+            className={styles.headerSubtext} 
+            data-aos="fade-in"
+          >
             Have something valuable to say? Share your thoughts, ideas, and expertise with the world! Writing a blog is more than just words.
           </p>
-          <Link href="/blog_write" className={styles.writeButton}>
+          <button 
+            className={styles.writeButton} 
+            onClick={handleCreateBlogClick} 
+          >
             Write Blog
-          </Link>
+          </button>
         </div>
       </div>
       </div>
@@ -29,7 +64,12 @@ export default function Home() {
       <main className={styles.mainContent}>
         {/*Top Blogs Section*/}
         <section className={styles.section}>
-          <h2 className={styles.sectionHeading}>Top Blogs</h2>
+          <h2 
+            className={styles.sectionHeading} 
+            data-aos="fade-up"
+          >
+            Top Blogs
+          </h2>
           <div className={styles.cardContainer}>
             {[1, 2, 3].map((index) => (
               <div key={index} className={styles.card}>
@@ -45,7 +85,12 @@ export default function Home() {
 
         {/*People You Know Section*/}
         <section className={styles.section}>
-          <h2 className={styles.sectionHeading1}>People You Know</h2>
+          <h2 
+            className={styles.sectionHeading1} 
+            data-aos="fade-up"
+          >
+            People You Know
+          </h2>
           <div className={styles.cardContainer}>
             {[1, 2, 3].map((index) => (
               <div key={index} className={styles.card}>
@@ -61,7 +106,12 @@ export default function Home() {
 
         {/*Recent Blogs Section*/}
         <section className={styles.section}>
-          <h2 className={styles.sectionHeading1}>Recent Blogs</h2>
+          <h2 
+            className={styles.sectionHeading1} 
+            data-aos="fade-up"
+          >
+            Recent Blogs
+          </h2>
           <div className={styles.cardContainer}>
             {[1, 2, 3].map((index) => (
               <div key={index} className={styles.card}>
@@ -79,6 +129,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 /*
 import Image from 'next/image';

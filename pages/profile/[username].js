@@ -171,7 +171,8 @@ export default function ProfilePage() {
       <span className="text-xl text-gray-700 font-normal">@{username}</span>
       <div className="flex items-center space-x-3">
         {/* Show the button only after determining the follow status */}
-        {isFollowing !== null && (
+        {/* not showing on own profile */}
+        {isFollowing !== null && auth.currentUser?.uid !== user?.uid && (
           <div className="mt-4 flex justify-center">
             <button
               onClick={handleFollow}

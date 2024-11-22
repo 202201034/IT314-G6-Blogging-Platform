@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import logo from './logo.png';
 import Link from 'next/link';
@@ -16,6 +16,10 @@ export default function Navbar() {
   const [searchResults, setSearchResults] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { authUser, signOut } = useAuth();
+  const searchRef = useRef(null);
+  const profileMenuRef = useRef(null);
+  const notificationMenuRef = useRef(null);
+
 
   const handleLogout = async () => {
     try {
@@ -40,10 +44,10 @@ export default function Navbar() {
 
   const handleSearch = async (e) => {
     if (!searchTerm) return;
-  
+
     try {
       console.log("Searching for:", searchTerm);
-  
+
       // Query for users by username
       const userQuery = query(
         collection(db, 'users'),
@@ -57,9 +61,9 @@ export default function Navbar() {
         profileImage: doc.data().profileImage || '/default-avatar.png', // Default profile picture
         type: 'user'
       }));
-  
+
       console.log("Users found:", users);
-  
+
       // Query for blogs by title
       const blogQuery = query(
         collection(db, 'blogs'),
@@ -72,16 +76,16 @@ export default function Navbar() {
         title: doc.data().title,
         type: 'blog'
       }));
-  
+
       console.log("Blogs found:", blogs);
-  
+
       // Combine results
       setSearchResults([...users, ...blogs]);
     } catch (error) {
       console.error("Error fetching search results:", error);
     }
   };
-  
+
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);
@@ -126,6 +130,32 @@ export default function Navbar() {
   }
 
 
+  // Close the menus when clicking outside
+  useEffect(() => {
+
+    const handleClickOutside = (event) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target) &&
+        notificationMenuRef.current &&
+        !notificationMenuRef.current.contains(event.target) &&
+        searchRef.current &&
+        !searchRef.current.contains(event.target)
+      ) {
+        setIsProfileMenuOpen(false);
+        setIsNotificationMenuOpen(false);
+        setSearchResults([]);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+
+  }, []);
+
   useEffect(() => {
     handleSearch();
   }, [searchTerm]);
@@ -144,7 +174,10 @@ export default function Navbar() {
           </Link>
 
           {/* Search Field */}
-          <div className="hidden lg:flex flex-grow mx-4 max-w-xl relative">
+          <div
+            className="hidden lg:flex flex-grow mx-4 max-w-xl relative"
+            ref={searchRef}
+          >
             <input
               type="text"
               placeholder="Search Blog..."
@@ -158,39 +191,39 @@ export default function Navbar() {
 
             {/* Search Results Dropdown */}
             {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 w-full bg-neutral-800 rounded-md shadow-lg max-h-60 overflow-y-auto z-10 mt-1">
-              {searchResults.map((result) => (
-                <div
-                  key={result.id}
-                  onClick={() => {
-                    setSearchTerm(''); // Clear search input
-                    setSearchResults([]);
-                    Router.push(result.type === 'user' ? `/profile/${result.username}` : `/blog/${result.id}`);
-                  }}
-                  className="flex items-center p-2 hover:bg-neutral-700 cursor-pointer"
-                >
-                  {result.type === 'user' && (
+              <div className="absolute top-full left-0 w-full bg-neutral-800 rounded-md shadow-lg max-h-60 overflow-y-auto z-10 mt-1">
+                {searchResults.map((result) => (
+                  <div
+                    key={result.id}
+                    onClick={() => {
+                      setSearchTerm(''); // Clear search input
+                      setSearchResults([]);
+                      Router.push(result.type === 'user' ? `/profile/${result.username}` : `/blog/${result.id}`);
+                    }}
+                    className="flex items-center p-2 hover:bg-neutral-700 cursor-pointer"
+                  >
+                    {result.type === 'user' && (
                       <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center mr-2">
 
 
-                    <Image
-                      src={result.profileImage}
-                      alt={result.username}
-                      width={32}
-                      height={32}
-                      quality={100}
-                      className="object-cover object-center w-full h-full "
+                        <Image
+                          src={result.profileImage}
+                          alt={result.username}
+                          width={32}
+                          height={32}
+                          quality={100}
+                          className="object-cover object-center w-full h-full "
 
-                    />
-                    </div>
-                  )}
-                  <p className="text-sm text-white">
-                    {result.type === 'user' ? `${result.username}` : `Blog: ${result.title}`}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+                        />
+                      </div>
+                    )}
+                    <p className="text-sm text-white">
+                      {result.type === 'user' ? `${result.username}` : `Blog: ${result.title}`}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
 
           </div>
 
@@ -205,7 +238,11 @@ export default function Navbar() {
             {/* Notification Bell (only show if user is authenticated) */}
             {authUser && (
               <li className="relative">
-                <button onClick={toggleNotificationMenu} className="focus:outline-none">
+                <button
+                  onClick={toggleNotificationMenu}
+                  className="focus:outline-none"
+                  ref={notificationMenuRef}
+                >
                   <FontAwesomeIcon icon={faBell} className="text-white hover:text-orange-500" />
                 </button>
                 {isNotificationMenuOpen && (
@@ -228,7 +265,10 @@ export default function Navbar() {
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
               Create New Blog
             </button>
-            <div className="relative">
+            <div
+              className="relative"
+              ref={profileMenuRef}
+            >
               <button onClick={toggleProfileMenu} className="focus:outline-none">
                 <FontAwesomeIcon icon={faUser} className="text-white hover:text-orange-500" />
               </button>

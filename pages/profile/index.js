@@ -25,6 +25,7 @@ import { Camera } from 'lucide-react'; // Import Camera from react-feather
 import Link from 'next/link';
 import { useRouter } from "next/router";
 
+
 export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [user, setUser] = useState(null);
@@ -244,7 +245,9 @@ export default function ProfilePage() {
 
     {/* Blogs Section */}
     <div className="w-full">
-      <h2 className="text-xl font-medium text-gray-700 mb-6">Your Blogs</h2>
+      <h2 className="text-xl font-medium text-gray-700 mb-6">
+        Your Blogs
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {userBlogs.map((blog) => (
           <button key={blog.id} 
@@ -262,14 +265,22 @@ export default function ProfilePage() {
 
     {/* Drafts Section */}
     <div className="w-full mt-8">
-      <h2 className="text-xl font-medium text-gray-700 mb-6">Your Drafts</h2>
+      <h2 className="text-xl font-medium text-gray-700 mb-6">
+        Your Drafts
+      </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {userDrafts.map((draft) => (
             <div key={draft.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h3 className="text-lg font-medium text-gray-800 mb-2">{draft.title}</h3>
-                <div className="text-gray-500 text-sm line-clamp-1 mb-6">
-                  {draft.content || "..................................."}
-                </div>
+              <h3 
+                className="text-lg font-medium text-gray-800 mb-2"
+              >
+                {draft.title.replace(/<\/?[^>]+(>|$)/g, "")}
+              </h3>
+              <div 
+                className="text-gray-500 text-sm line-clamp-1 mb-6"
+              >
+                {draft.content.replace(/<\/?[^>]+(>|$)/g, "") || "..................................."}
+              </div>
               <div className="text-right">
               <Link href={`/blog_write?draftId=${draft.id}`} className="text-indigo-600 text-sm">Continue editing</Link>
               </div>
