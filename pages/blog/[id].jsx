@@ -1,11 +1,12 @@
 import styles from '../../styles/showBlog.module.css';
 
 // libraries for like,share,... icon
-import { FaHeart, FaBookmark, FaEllipsisV } from 'react-icons/fa';
 import { HeartIcon, ShareIcon, BookmarkIcon } from '@heroicons/react/outline';
+import { FaHeart,FaRegHeart,FaBookBookmark,FaRegBookmark, FaBookmark, FaShare, FaShareNodes } from 'react-icons/fa6';
+import { HiBookmark, HiOutlineBookmark } from "react-icons/hi";
 import { isLoggedIn } from '@/firebase/firebaseutils';
 import { db } from '../../firebase/firebase';
-import { doc, getDoc, getDocs, collection, deleteDoc,setDoc,updateDoc,increment } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, deleteDoc,setDoc,updateDoc,increment,arrayUnion,arrayRemove } from 'firebase/firestore';
 import { useRouter } from "next/router";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
@@ -14,24 +15,6 @@ import CommentsSection from '../comment_section';
 import DOMPurify from 'dompurify';
 import Image from 'next/image';
 
-// can use this after like = {red heart}
-
-// <button
-// style={{ border: 'none', background: 'none', cursor: 'pointer' }}
-// >
-// <FaHeart size={24} color="red" />
-// </button>
-
-
-// can use this after save = {saved}
-
-// <button
-// style={{ border: 'white', background: 'black', cursor: 'pointer' }}
-// >
-// <FaBookmark size={24} />
-// </button>
-
-
 const showBlog = ({ blog,username,profileImage }) => {
 
     const router = useRouter();
@@ -39,6 +22,9 @@ const showBlog = ({ blog,username,profileImage }) => {
     const [isFollowing, setIsFollowing] = useState(false);
     const [error, setError] = useState('');
     const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
+    const [savedBlogs, setSavedBlogs] = useState([]);
+    const [loading, setLoading] = useState(true); // Loading state
+
 
     // Fetch the current user's ID
     useEffect(() => {
@@ -46,6 +32,8 @@ const showBlog = ({ blog,username,profileImage }) => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
         if (user) {
             setCurrentUser(user.uid); // Set current user's ID
+            fetchSavedBlogs(user.uid);
+            fetchBlogDetails(user.uid);
         } else {
             setCurrentUser(null); // No user is logged in
         }
@@ -61,19 +49,165 @@ const showBlog = ({ blog,username,profileImage }) => {
     const name = 'name';
     const blogTitle = blog.title;
     const blogContent = blog.content;
-    const likeCount = 0;
     const blogId = blog.id;
 
-    const handleLike = () => {
+    const [isLiked, setIsLiked] = useState(false); // Track like state
+  const [likeCount, setLikeCount] = useState(0); // Track like count
 
-    };
 
-    const handleShare = () => {
-    };
+  // Function to check if the current user has liked the blog
+  const checkIfLiked = async () => {
+    try {
+      const userRef = doc(db, 'users', currentUserId);
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        const likedBlogIds = userDoc.data().likedBlogIds || [];
+        setIsLiked(likedBlogIds.includes(blogId)); // Set isLiked based on user data
+        console.log('liked blog');
+      }
+    } catch (error) {
+      console.error('Error checking if blog is liked:', error);
+    }
+  };
 
-    const handleSave = () => {
+  useState(() => {
+    if (currentUser) {
+      checkIfLiked(); // Check if the current user has liked the blog
+    }
+  }, [currentUser]);
 
-    };
+  const fetchBlogDetails = async (userId) => {
+    setLoading(true);
+    try {
+      const blogRef = doc(db, "blogs", blogId);
+      const blogDoc = await getDoc(blogRef);
+
+      if (blogDoc.exists()) {
+        setLikeCount(blogDoc.data().likeCount || 0);
+      }
+
+      if (userId) {
+        const userRef = doc(db, "users", userId);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+          const likedBlogIds = userDoc.data().likedBlogIds || [];
+          setIsLiked(likedBlogIds.includes(blogId));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching blog details:", error);
+    }finally{
+      setLoading(false);
+    }
+  };
+
+  // Function to handle like/unlike
+  const handleLike = async () => {
+    if (!currentUser) {
+      router.push("/login"); // Redirect to login if not logged in
+      return;
+    }
+
+    try {
+      const blogRef = doc(db, 'blogs', blogId);
+      const userRef = doc(db, 'users', currentUser);
+
+      // Fetch user and blog data from Firestore
+      const userDoc = await getDoc(userRef);
+      const blogDoc = await getDoc(blogRef);
+
+      if (userDoc.exists() && blogDoc.exists()) {
+        console.log('exist');
+        // Initialize likeCount and likedBlogIds if they do not exist
+        const currentLikeCount = blogDoc.data().likeCount || 0;
+        console.log(currentLikeCount);
+        const likedBlogIds = userDoc.data().likedBlogIds || [];
+        console.log(!!likedBlogIds);
+        
+
+        // Toggle like/unlike behavior
+        if (likedBlogIds.includes(blogId)) {
+          // User has already liked the blog, so unlike it
+          console.log('1');
+          await updateDoc(blogRef, {
+            likeCount: increment(-1), // Decrement like count
+          });
+          await updateDoc(userRef, {
+            likedBlogIds: arrayRemove(blogId), // Remove blogId from likedBlogIds array
+          });
+          setIsLiked(false); // Set like state to false
+          setLikeCount(currentLikeCount - 1); // Update local like count
+        } else {
+          // User has not liked the blog, so like it
+          console.log('not liked');
+          await updateDoc(blogRef, {
+            likeCount: increment(1), // Increment like count
+          });
+          await updateDoc(userRef, {
+            likedBlogIds: arrayUnion(blogId), // Add blogId to likedBlogIds array
+          });
+          setIsLiked(true); // Set like state to true
+          setLikeCount(currentLikeCount + 1); // Update local like count
+        }
+      }
+    } catch (error) {
+      console.error('Error liking/unliking blog:', error);
+    }
+};
+
+
+  // Fetch the initial like status and count when component mounts
+
+  const handleShare = async () => {
+    try {
+      const url = `${window.location.origin}/blog/${blogId}`; // Construct the URL
+      await navigator.clipboard.writeText(url); // Copy to clipboard
+      alert("Blog URL copied to clipboard!"); // Notify user
+    } catch (error) {
+      console.error("Failed to copy URL:", error);
+      alert("Failed to copy URL. Please try again.");
+    }
+  };
+
+    const fetchSavedBlogs = async (userId) => {
+      try {
+          const savedBlogsRef = doc(db, 'users', userId);
+          const savedBlogsDoc = await getDoc(savedBlogsRef);
+          if (savedBlogsDoc.exists()) {
+              setSavedBlogs(savedBlogsDoc.data().savedBlogs || []);
+          }
+      } catch (error) {
+          console.error('Error fetching saved blogs:', error);
+      }
+  };
+
+  const handleSave = async () => {
+      if (!currentUser) {
+          router.push("/login");
+          return;
+      }
+
+      const blogId = blog.id;
+      const updatedSavedBlogs = savedBlogs.includes(blogId)
+          ? savedBlogs.filter(id => id !== blogId) // Remove from saved if already saved
+          : [...savedBlogs, blogId]; // Add to saved if not saved
+
+      // Update the saved blogs in Firestore
+      try {
+          const userRef = doc(db, 'users', currentUser);
+          await updateDoc(userRef, {
+              savedBlogs: updatedSavedBlogs
+          });
+          setSavedBlogs(updatedSavedBlogs); // Update the state locally
+      } catch (error) {
+          console.error('Error updating saved blogs:', error);
+          setError('Failed to save blog. Please try again.');
+      }
+  };
+
+  const isSaved = savedBlogs.includes(blog.id); // Check if the blog is saved
+
 
     const handleCommentSend = () => {
 
@@ -215,6 +349,11 @@ const showBlog = ({ blog,username,profileImage }) => {
             }, 3000);
         }
     };
+    if(loading){
+      return(
+        <Loader/>
+      );
+    }
 
     return (
         <div className={styles.blogContainer}>
@@ -317,7 +456,11 @@ const showBlog = ({ blog,username,profileImage }) => {
                             aria-label="Like"
                             onClick={handleLike}
                         >
-                            <HeartIcon className="h-9 w-9 text-white" />
+                            {isLiked ? (
+          <FaHeart size={24} color="red" /> // Show filled heart if liked
+        ) : (
+          <FaRegHeart size={24} /> // Show outlined heart if not liked
+        )}
                         </button>
 
                         {/* count a blogLike */}
@@ -329,17 +472,20 @@ const showBlog = ({ blog,username,profileImage }) => {
                             aria-label="Share"
                             onClick={handleShare}
                         >
-                            <ShareIcon className="h-8 w-8 text-white" />
+                            <FaShareNodes className="h-6 w-6 text-white" />
                         </button>
 
                         {/* Save icon */}
                         <button
-                            // className="p-2 bg-transparent border-2 border-white rounded-full hover:bg-white hover:text-gray-600"
-                            aria-label="Bookmark"
-                            onClick={handleSave}
-                        >
-                            <BookmarkIcon className="h-8 w-8 text-white" />
-                        </button>
+                    aria-label="Bookmark"
+                    onClick={handleSave}
+                >
+                    {isSaved ? (
+                        <FaBookmark className="h-6 w-6 text-white" /> // Filled icon when saved
+                    ) : (
+                        <FaRegBookmark className="h-6 w-6 text-white" /> // Outline icon when not saved
+                    )}
+                </button>
                     </div>
 
                 </div>
