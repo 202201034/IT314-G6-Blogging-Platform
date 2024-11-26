@@ -13,6 +13,7 @@ import {
   setDoc, 
   deleteDoc,
 } from "firebase/firestore";
+import Loader from "../components/Loader";
 import { 
   ref, 
   uploadBytes, 
@@ -373,7 +374,7 @@ export default function ProfilePage() {
             )}
           </div>
         ) : (
-          <p>Loading...</p>
+          <Loader/>
         )}
       </div>
     </div>

@@ -74,7 +74,7 @@
 
 .authorInfo > div {
     width: 64px; /* Set the width of the profile image container */
-    margin-right: 10px;
+    margin-right: 20px;
 }
 
 
@@ -95,13 +95,15 @@
 .btnSection {
     width: 100%;
     justify-content: right;
-    margin-left: 50px;
+    margin-left: 40px;
+    margin-right: 20px;
 }
 
 .followBtn {
     background-color: #3797ef;
     color: white;
     border: none;
+    margin-right: 20px;
     padding: 5px 10px;
     border-radius: 5px;
     cursor: pointer;
@@ -191,3 +193,85 @@
     justify-content: space-between;
     align-items: center;
 }
+
+
+/* Modal background */
+.unfollowModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1000; /* Ensure it's above other content */
+  }
+
+  .unfollowModal1 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1000; /* Ensure it's above other content */
+  }
+  
+  /* Modal content */
+  .unfollowModalContent {
+    background-color: black;
+    padding: 20px;
+    border-radius: 8px;
+    border-color: #3797ef;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .unfollowModalContent1 {
+    background-color: rgb(144, 202, 249);
+    padding: 20px;
+    border-radius: 8px;
+    border-color: #3797ef;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Modal text */
+  .unfollowModal p {
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+  
+  /* Buttons */
+  .unfollowModal button {
+    margin: 5px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .unfollowModal button:hover {
+    background-color: #f0f0f0;
+  }
+  
+  /* Yes button */
+  .unfollowModal .yesBtn {
+    background-color: #dc3545; /* Red for "Yes" */
+    color: white;
+  }
+  
+  /* No button */
+  .unfollowModal .noBtn {
+    background-color: #28a745; /* Green for "Cancel" */
+    color: white;
+  }
+  

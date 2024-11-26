@@ -1,11 +1,12 @@
 "use client";
-
+import styles from '../../styles/showBlog.module.css';
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc, increment, deleteDoc } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { db, auth } from '../../firebase/firebase';
 import Router from 'next/router';
+import Loader from '../components/Loader';
 import { followUser, unfollowUser, isLoggedIn } from '../../firebase/firebaseutils'; // Assuming unfollowUser is the function in utils
 
 export default function ProfilePage() {
@@ -184,27 +185,11 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {showUnfollowConfirm && (
-          <div className="mt-4 p-4 bg-gray-100 border border-gray-300 rounded-md">
-            <p className="text-gray-800">Are you sure you want to unfollow?</p>
-            <div className="flex mt-2 justify-center">
-              <button
-                onClick={handleUnfollow}
-                className="py-2 px-4 bg-red-600 text-white rounded mr-2"
-              >
-                Yes
-              </button>
-              <button
-                onClick={cancelUnfollow}
-                className="py-2 px-4 bg-gray-300 text-black rounded"
-              >
-                No
-              </button>
-            </div>
-          </div>
-        )}
+
       </div>
+      
     </div>
+    
 
     {/* Profile Picture, Name, Bio, and Stats Section */}
     <div className="flex items-start mb-8">
@@ -272,10 +257,31 @@ export default function ProfilePage() {
     </div>
   </div>
 ) : (
-  <div className="text-center text-gray-600">Loading profile...</div>
+  <Loader/>
 )}
 
       </div>
+      {showUnfollowConfirm && (
+  <div className={styles.unfollowModal}>
+    <div className={styles.unfollowModalContent1}>
+      <p>Are you sure you want to unfollow?</p>
+      <div>
+        <button 
+          onClick={handleUnfollow} 
+          className={`${styles.unfollowModalButton} ${styles.yesBtn}`}
+        >
+          Yes
+        </button>
+        <button 
+          onClick={cancelUnfollow} 
+          className={`${styles.unfollowModalButton} ${styles.noBtn}`}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
   

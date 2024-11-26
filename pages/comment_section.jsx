@@ -115,6 +115,9 @@ const CommentsSection = ({ blogId }) => {
   // Fetch profile pictures for all comments' usernames
   useEffect(() => {
     const usernamesToFetch = [...new Set(comments.map((c) => c.username))];
+    if (auth.currentUser) {
+      usernamesToFetch.push(auth.currentUser.displayName); // Add the current user's username
+    }
     usernamesToFetch.forEach((username) => fetchProfilePicture(username));
   }, [comments]); // Trigger when comments change
 
@@ -135,7 +138,7 @@ const CommentsSection = ({ blogId }) => {
               marginLeft: comment.parentId ? "20px" : "0",
             }}
           >
-            <div style={{ marginRight: "10px" }}>
+            <div style={{ marginRight: "10px",  width: "32px"}}>
               <img
                 src={profilePictures[comment.username] || "default-profile-pic-url"}
                 alt={comment.username}

@@ -3,8 +3,9 @@ import styles from '../../styles/showBlog.module.css';
 // libraries for like,share,... icon
 import { FaHeart, FaBookmark, FaEllipsisV } from 'react-icons/fa';
 import { HeartIcon, ShareIcon, BookmarkIcon } from '@heroicons/react/outline';
+import { isLoggedIn } from '@/firebase/firebaseutils';
 import { db } from '../../firebase/firebase';
-import { doc, getDoc, getDocs, collection, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, getDocs, collection, deleteDoc,setDoc,updateDoc,increment } from 'firebase/firestore';
 import { useRouter } from "next/router";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
@@ -35,10 +36,9 @@ const showBlog = ({ blog,username,profileImage }) => {
 
     const router = useRouter();
     const [currentUser, setCurrentUser] = useState(null);
+    const [isFollowing, setIsFollowing] = useState(false);
     const [error, setError] = useState('');
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
-    const [hashtags, setHashtags] = useState([]);
+    const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
 
     // Fetch the current user's ID
     useEffect(() => {
@@ -82,6 +82,110 @@ const showBlog = ({ blog,username,profileImage }) => {
     const handleDotBtn = () => {
 
     };
+
+    const followUser = async (userId, currentUserId) => {
+        try {
+          // Create a follow document in Firestore
+          await setDoc(doc(db, 'follows', `${currentUserId}_${userId}`), {
+            followerId: currentUserId,
+            followingId: userId,
+          });
+      
+          // Update follower and following counts
+          const targetUserRef = doc(db, 'users', userId);
+          const currentUserRef = doc(db, 'users', currentUserId);
+      
+          await updateDoc(targetUserRef, {
+            followersCount: increment(1),
+          });
+      
+          await updateDoc(currentUserRef, {
+            followingCount: increment(1),
+          });
+      
+          console.log("Successfully followed the user.");
+        } catch (err) {
+          console.error("Error following user: ", err);
+          throw err;
+        }
+      };
+      
+      // Function to unfollow a user
+    const unfollowUser = async (userId, currentUserId) => {
+        try {
+          // Unfollow user by deleting the follow document
+          await deleteDoc(doc(db, 'follows', `${currentUserId}_${userId}`));
+      
+          // Update follower and following counts
+          const targetUserRef = doc(db, 'users', userId);
+          const currentUserRef = doc(db, 'users', currentUserId);
+      
+          await updateDoc(targetUserRef, {
+            followersCount: increment(-1),
+          });
+      
+          await updateDoc(currentUserRef, {
+            followingCount: increment(-1),
+          });
+      
+          console.log("Successfully unfollowed the user.");
+        } catch (err) {
+          console.error("Error unfollowing user: ", err);
+          throw err;
+        }
+      };
+      
+
+    const checkIfFollowing = async (currentUserId, blogAuthorId) => {
+        const followDocRef = doc(db, "follows", `${currentUserId}_${blogAuthorId}`);
+        const followDoc = await getDoc(followDocRef);
+        setIsFollowing(followDoc.exists());
+      };
+
+      useEffect(() => {
+        if (currentUser && blog.userId) {
+            checkIfFollowing(currentUser, blog.userId);
+        }
+    }, [currentUser, blog.userId]);
+    
+    
+      const handleFollow = async () => {
+        console.log('pressed');
+        if (!isLoggedIn()) {
+          router.push("/login");
+          return;
+        }
+        console.log(currentUser);
+        console.log(blog.userId);
+        console.log(checkIfFollowing(currentUser,blog.userId));
+        console.log(isFollowing);
+    
+        if (isFollowing) {
+          setShowUnfollowConfirm(true);
+        } else {
+          try {
+            console.log('pressed1');
+            await followUser(blog.userId, currentUser);
+            setIsFollowing(true);
+          } catch (err) {
+            setError(`Error following user: ${err.message}`);
+          }
+        }
+      };
+    
+      const handleUnfollow = async () => {
+        try {
+          await unfollowUser(blog.userId, currentUser);
+          setIsFollowing(false);
+          setShowUnfollowConfirm(false);
+        } catch (err) {
+          setError(`Error unfollowing user: ${err.message}`);
+        }
+      };
+    
+      const cancelUnfollow = () => {
+        setShowUnfollowConfirm(false);
+      };
     
     const sanitizedContent = typeof window !== "undefined" ? DOMPurify.sanitize(blog.content) : blog.content;
     
@@ -174,11 +278,12 @@ const showBlog = ({ blog,username,profileImage }) => {
                      ? (
                         <div style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
                         <Image
-                            src={profileImage}  // URL of the profile picture
-                            alt="Author's Avatar"
-                            layout="fill"  // Scales to fill the parent container
-                            objectFit="cover"  // Maintains aspect ratio while filling
-                        />
+      src={profileImage}  // URL of the profile picture
+      alt="Author's Avatar"
+      layout="fill"  // This will make the image fill the parent container
+      objectFit="cover"  // Maintains aspect ratio while filling the container
+      sizes="(max-width: 768px) 100vw, 300px"  // Adjust based on viewport width
+    />
                     </div>
                     
                   
@@ -189,10 +294,14 @@ const showBlog = ({ blog,username,profileImage }) => {
                             <p>@{username}</p>
                         </div>
                         <div className={styles.btnSection}>
-                            <button className={styles.followBtn}>
-                                Follow
-                            </button>
+                        {currentUser !== blog.userId && (
+            <button onClick={handleFollow} className={styles.followBtn}>
+              {isFollowing ? "Unfollow" : "Follow"}
+            </button>
+          )}
                         </div>
+                       {/* Unfollow Confirmation Modal */}
+
                     </div>
 
                     {/* Comments Section */}
@@ -236,6 +345,28 @@ const showBlog = ({ blog,username,profileImage }) => {
                 </div>
 
             </div>
+
+            {showUnfollowConfirm && (
+  <div className={styles.unfollowModal}>
+    <div className={styles.unfollowModalContent}>
+      <p>Are you sure you want to unfollow?</p>
+      <div>
+        <button 
+          onClick={handleUnfollow} 
+          className={`${styles.unfollowModalButton} ${styles.yesBtn}`}
+        >
+          Yes
+        </button>
+        <button 
+          onClick={cancelUnfollow} 
+          className={`${styles.unfollowModalButton} ${styles.noBtn}`}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
         </div>
     );
 }
