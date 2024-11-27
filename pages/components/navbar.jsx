@@ -3,12 +3,16 @@ import Image from 'next/image';
 import logo from './logo.png';
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faUser, faSearch, faBell } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faUser, faSearch, faBell,faTrash } from '@fortawesome/free-solid-svg-icons';
 import Router from 'next/router';
 import { useAuth } from '/firebase/auth.js';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs,orderBy, doc, getDoc,updateDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase/firebase';
 import { signOut } from 'firebase/auth';
+import { format } from 'date-fns'; // If using date-fns
+
+// Inside your notifications rendering section:
+
 
 export default function Navbar() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -19,6 +23,8 @@ export default function Navbar() {
   const searchRef = useRef(null);
   const profileMenuRef = useRef(null);
   const notificationMenuRef = useRef(null);
+  const [notifications, setNotifications] = useState([]); // For storing notifications
+
 
 
   const handleLogout = async () => {
@@ -37,6 +43,37 @@ export default function Navbar() {
       Router.push('/login');
     }
   };
+
+  const handleDeleteNotification = async (notificationId) => {
+    try {
+      // Remove the notification with the given ID from the state
+      const updatedNotifications = notifications.filter(
+        (notification) => notification.id !== notificationId
+      );
+      setNotifications(updatedNotifications);
+  
+      // If there are no notifications left, close the notification menu
+      if (updatedNotifications.length === 0) {
+        setIsNotificationMenuOpen(false);
+      }
+  
+      // Optionally, update Firestore if you're storing notifications there
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      await updateDoc(userRef, {
+        notifications: updatedNotifications,
+      });
+  
+      console.log('Notification deleted');
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+  
+  
+  
+
+
+  
 
   const handleProfileClick = () => {
     Router.push('/profile');
@@ -92,10 +129,36 @@ export default function Navbar() {
     setIsNotificationMenuOpen(false);
   };
 
-  const toggleNotificationMenu = () => {
+  const toggleNotificationMenu = async () => {
     setIsNotificationMenuOpen(!isNotificationMenuOpen);
     setIsProfileMenuOpen(false);
+    console.log('notification');
+  
+    // Fetch notifications from Firestore when menu is opened
+    if (!isNotificationMenuOpen && authUser) {
+      try {
+        const userRef = doc(db, "users", auth.currentUser.uid);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          let notifications = userDoc.data().notifications || [];
+  
+          // Sort notifications by timestamp in descending order (latest first)
+          notifications = notifications.sort((a, b) => b.timestamp - a.timestamp);
+          console.log('notification');
+          console.log(notifications);
+  
+          setNotifications(notifications);
+        } else {
+          console.log("No such user document.");
+          return [];
+        }
+      } catch (error) {
+        console.error("Error retrieving notifications:", error);
+        return [];
+      }
+    }
   };
+  
 
   const navItems = [
     { label: 'Explore', href: '#' },
@@ -237,25 +300,35 @@ export default function Navbar() {
             ))}
             {/* Notification Bell (only show if user is authenticated) */}
             {authUser && (
-              <li className="relative">
-                <button
-                  onClick={toggleNotificationMenu}
-                  className="focus:outline-none"
-                  ref={notificationMenuRef}
-                >
-                  <FontAwesomeIcon icon={faBell} className="text-white hover:text-orange-500" />
-                </button>
-                {isNotificationMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-neutral-800 rounded-md shadow-lg py-1 z-10">
-                    <div className="px-4 py-2 font-semibold text-white border-b border-neutral-700">Notifications</div>
-                    <div className="max-h-64 overflow-y-auto">
-                      {/* Example notifications */}
-                      <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-neutral-700">New comment on your blog</a>
-                      <a href="#" className="block px-4 py-2 text-sm text-white hover:bg-neutral-700">You have a new follower</a>
-                    </div>
-                  </div>
-                )}
-              </li>
+              <div ref={notificationMenuRef} className="relative">
+              <FontAwesomeIcon
+                icon={faBell}
+                onClick={toggleNotificationMenu}
+                className="text-white text-xl cursor-pointer"
+              />
+              
+              {isNotificationMenuOpen && (
+                <div className="absolute top-full right-0 w-80 bg-neutral-800 rounded-md shadow-lg max-h-64 overflow-y-auto z-10 mt-2">
+                  {notifications.map((notification) => (
+    <div key={notification.id} className="p-4 border-b border-neutral-700 flex justify-between items-center">
+      <div>
+        <p className="text-sm text-white">{notification.message}</p>
+        <p className='text-xs'>
+          {notification.timestamp ? format(notification.timestamp.toDate(), 'MMM dd, yyyy HH:mm') : 'No timestamp'}
+        </p>
+      </div>
+      {/* Delete button */}
+      <button
+        onClick={() => handleDeleteNotification(notification.id)}
+        className="text-red-500 hover:text-red-700"
+      >
+        <FontAwesomeIcon icon={faTrash} className="text-lg" />
+      </button>
+    </div>
+  ))}
+                </div>
+              )}
+            </div>
             )}
           </ul>
 

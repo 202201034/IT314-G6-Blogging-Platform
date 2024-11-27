@@ -14,6 +14,7 @@ import Loader from '../components/Loader';
 import CommentsSection from '../comment_section';
 import DOMPurify from 'dompurify';
 import Image from 'next/image';
+import { addNotificationToUser } from '@/firebase/firebaseutils';
 
 const showBlog = ({ blog,username,profileImage }) => {
 
@@ -21,9 +22,11 @@ const showBlog = ({ blog,username,profileImage }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [isFollowing, setIsFollowing] = useState(false);
     const [error, setError] = useState('');
+    const [currentusername, setcurrentusername] = useState('');
     const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
     const [savedBlogs, setSavedBlogs] = useState([]);
     const [loading, setLoading] = useState(true); // Loading state
+    const [blogusername, setBlogUserName] = useState('');
 
 
     // Fetch the current user's ID
@@ -34,6 +37,7 @@ const showBlog = ({ blog,username,profileImage }) => {
             setCurrentUser(user.uid); // Set current user's ID
             fetchSavedBlogs(user.uid);
             fetchBlogDetails(user.uid);
+            fetchCurrentUsername(user.uid);
         } else {
             setCurrentUser(null); // No user is logged in
         }
@@ -41,6 +45,20 @@ const showBlog = ({ blog,username,profileImage }) => {
 
         return () => unsubscribe();
     }, []);
+
+
+
+    const fetchCurrentUsername = async (uid) => {
+      try {
+        const userRef = doc(db, 'users', uid); // Reference to the user document
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          setcurrentusername(userDoc.data().username); // Set the current username
+        }
+      } catch (error) {
+        console.error('Error fetching username:', error);
+      }
+    };
 
     if (router.isFallback) {
         return <Loader />;
@@ -58,8 +76,9 @@ const showBlog = ({ blog,username,profileImage }) => {
   // Function to check if the current user has liked the blog
   const checkIfLiked = async () => {
     try {
-      const userRef = doc(db, 'users', currentUserId);
+      const userRef = doc(db, 'users', currentUser);
       const userDoc = await getDoc(userRef);
+
       if (userDoc.exists()) {
         const likedBlogIds = userDoc.data().likedBlogIds || [];
         setIsLiked(likedBlogIds.includes(blogId)); // Set isLiked based on user data
@@ -147,6 +166,14 @@ const showBlog = ({ blog,username,profileImage }) => {
           await updateDoc(userRef, {
             likedBlogIds: arrayUnion(blogId), // Add blogId to likedBlogIds array
           });
+          const title = DOMPurify.sanitize(blog.title);
+          const plainTextMessage = title.replace(/<[^>]*>/g, '');
+
+          const message = `${currentusername} liked your blog ${plainTextMessage}.`;
+          const metadata = { type: "like", blogId: "BLOG_ID" }; // Add relevant metadata
+
+          await addNotificationToUser(blog.userId, message, metadata);
+          console.log('notification');
           setIsLiked(true); // Set like state to true
           setLikeCount(currentLikeCount + 1); // Update local like count
         }
@@ -236,6 +263,13 @@ const showBlog = ({ blog,username,profileImage }) => {
           await updateDoc(currentUserRef, {
             followingCount: increment(1),
           });
+
+          const metadata = { type: "follow" }; // Add relevant metadata
+
+        const message = `${currentusername} followed you.`;
+
+
+        await addNotificationToUser(userId, message, metadata);
       
           console.log("Successfully followed the user.");
         } catch (err) {

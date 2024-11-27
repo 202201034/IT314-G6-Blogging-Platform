@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { db,auth } from "../firebase/firebase";  // Adjust the import based on your firebase config
 import { collection, addDoc,doc, getDoc,Timestamp } from "firebase/firestore";
+import { addNotificationToUser } from "@/firebase/firebaseutils";
+import DOMPurify from 'dompurify';
 
 const CommentForm = ({ blogId, parentId = null }) => {
   const [content, setContent] = useState("");
@@ -43,6 +45,59 @@ const CommentForm = ({ blogId, parentId = null }) => {
             parentId,  // If it's a reply, it will be set as the parent comment's ID
             userId: auth.currentUser.uid,
           });
+
+          try {
+            const blogDocRef = doc(db, "blogs", blogId);
+            const blogDocSnap = await getDoc(blogDocRef);
+
+            if (blogDocSnap.exists()) {
+              const blogData = blogDocSnap.data();
+              const blogAuthorId = blogData.userId; // Assuming blog's author ID is stored as 'userId'
+
+              if (blogAuthorId !== userId) {
+                let message = `${username} commented on your blog.`;
+                let metadata = { type: "comment" }; // Add relevant metadata
+
+                if (parentId) {
+                    // If it's a reply, find the parent comment's userId
+                    const parentCommentRef = doc(db, "blogs", blogId, "comments", parentId);
+                    const parentCommentSnap = await getDoc(parentCommentRef);
+      
+                    if (parentCommentSnap.exists()) {
+                      const parentCommentData = parentCommentSnap.data();
+                      const parentCommentUserId = parentCommentData.userId; // The user who made the parent comment
+      
+                      // Send notification to the parent comment's user
+
+                      const title = DOMPurify.sanitize(blogData.title);
+                      const plainTextMessage = title.replace(/<[^>]*>/g, '');
+
+                      message = `${username} replied to your comment on blog ${plainTextMessage}.`;
+                      console.log(message);
+                      await addNotificationToUser( parentCommentUserId, message, metadata);
+
+      
+                      // Create notification for the parent comment user
+
+                    }
+
+                }
+                else{
+                  message = `${username} commented on your blog ${content}.`;
+                  console.log(message);
+                  metadata = { type: "reply" }; // Add relevant metadata
+                await addNotificationToUser( blogAuthorId, message, metadata);
+                }
+
+
+
+              }
+            } else {
+              console.log("No such blog document!");
+            }
+          } catch (error) {
+            console.error("Error adding notification:", error);
+          }
       
           setContent("");  // Clear the input field after submission
         } else {

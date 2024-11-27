@@ -1,9 +1,15 @@
-import { doc, setDoc, deleteDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, setDoc,getDoc, deleteDoc, updateDoc, increment,arrayUnion,Timestamp } from 'firebase/firestore';
 import { db } from './firebase';
+import { v4 as uuidv4 } from 'uuid';
+import { useState } from 'react';
+
 
 
 import { getAuth } from "firebase/auth";
-const fetchUserDetails = async (userId) => {
+// Function to create a notification for a user
+
+
+export const fetchUserDetails = async (userId) => {
     try {
         // Get a reference to the user's document in the 'users' collection
         const userRef = doc(db, "users", userId);
@@ -29,9 +35,6 @@ const fetchUserDetails = async (userId) => {
     }
 };
 
-export default fetchUserDetails;
-
-
 export const isLoggedIn = () => {
   const auth = getAuth();
   return !!auth.currentUser;
@@ -40,6 +43,9 @@ export const isLoggedIn = () => {
 
 // Function to follow a user
 export const followUser = async (userId, targetUsername, currentUserId, followersCount, followingCount) => {
+  const[currentUsername,setCurrentUsername] = useState('');
+  const auth = getAuth();
+
   try {
     // Create a follow document in Firestore
     await setDoc(doc(db, 'follows', `${currentUserId}_${userId}`), {
@@ -58,6 +64,22 @@ export const followUser = async (userId, targetUsername, currentUserId, follower
     await updateDoc(currentUserRef, {
       followingCount: increment(1),
     });
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        const userDetails = await fetchUserDetails(currentUser.uid);
+        if (userDetails && userDetails.username) {
+          setCurrentUsername(userDetails.username);
+          console.log(userDetails);
+        }
+      }
+    const metadata = { type: "follow" }; // Add relevant metadata
+
+    const message = `${currentUsername} followed you.`;
+    console.log(message);
+
+
+    await addNotificationToUser(user.uid, message, metadata);
 
     console.log("Successfully followed the user.");
   } catch (err) {
@@ -88,5 +110,24 @@ export const unfollowUser = async (userId, targetUsername, currentUserId, follow
   } catch (err) {
     console.error("Error unfollowing user: ", err);
     throw err;
+  }
+};
+// Add notification to a user's notifications array
+export const addNotificationToUser = async (userId, message, metadata = {}) => {
+  try {
+    const userRef = doc(db, "users", userId);
+
+    await updateDoc(userRef, {
+      notifications: arrayUnion({
+        id: uuidv4(),
+        message,
+        timestamp: new Date(),
+        ...metadata,
+      }),
+    });
+
+    console.log("Notification added to user:", userId);
+  } catch (error) {
+    console.error("Error adding notification:", error);
   }
 };

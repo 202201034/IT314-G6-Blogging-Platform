@@ -140,7 +140,7 @@ const CommentsSection = ({ blogId }) => {
           >
             <div style={{ marginRight: "10px",  width: "32px"}}>
               <img
-                src={profilePictures[comment.username] || "default-profile-pic-url"}
+                src={profilePictures[comment.username] || "/profile_picture.png"}
                 alt={comment.username}
                 style={{
                   width: "32px",

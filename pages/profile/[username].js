@@ -8,8 +8,14 @@ import { db, auth } from '../../firebase/firebase';
 import Router from 'next/router';
 import Loader from '../components/Loader';
 import { followUser, unfollowUser, isLoggedIn } from '../../firebase/firebaseutils'; // Assuming unfollowUser is the function in utils
+import { addNotificationToUser, fetchUserDetails } from '../../firebase/firebaseutils';
+
+
+
 
 export default function ProfilePage() {
+
+  const [currentUsername, setCurrentUsername] = useState(''); // Store current user's username
   const [user, setUser] = useState(null);
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
@@ -26,9 +32,23 @@ export default function ProfilePage() {
   const { username: usernameParam } = router.query;
 
   useEffect(() => {
+    const fetchCurrentUserDetails = async () => {
+      const currentUser = auth.currentUser;
+
+      if (currentUser) {
+        const userDetails = await fetchUserDetails(currentUser.uid);
+        if (userDetails && userDetails.username) {
+          setCurrentUsername(userDetails.username);
+        }
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
         try {
+          await fetchCurrentUserDetails(); // Fetch current user's details when auth state changes
+
           const target = usernameParam || null;
+          
 
           // If a username is provided
           if (target) {
@@ -106,14 +126,22 @@ export default function ProfilePage() {
       try {
         // Call the follow function from utils
         await followUser(user.uid, username, auth.currentUser.uid, followersCount, followingCount);
+        
 
         // Update local state after following
         setIsFollowing(true); // Now user is following
         setFollowersCount(followersCount + 1); // Increment followers count
         setFollowingCount(followingCount); // Increment following count
+        const metadata = { type: "follow" }; // Add relevant metadata
+
+        const message = `${currentUsername} followed you.`;
+
+
+        await addNotificationToUser(user.uid, message, metadata);
+
       } catch (err) {
         setError(`Error following user: ${err.message}`);
-      }
+      } 
     }}else{
       Router.push('/login');
     }
