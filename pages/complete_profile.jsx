@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Camera } from 'lucide-react';
 import { auth, db } from "../firebase/firebase";
 import { setDoc, doc } from "firebase/firestore";
+import { getDocs,query,collection,where } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import Loader from './components/Loader';
 
@@ -15,6 +16,8 @@ const ProfileSetup = () => {
   const [location, setLocation] = useState("");
   const [interests, setInterests] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState(true);
+  const [error, setError] = useState("");
 
 
   const router = useRouter();
@@ -30,11 +33,28 @@ const ProfileSetup = () => {
     }
   };
 
+  const checkUsernameAvailability = async (newUsername) => {
+    try {
+      newUsername = newUsername.trim();
+      const usernameQuery = query(collection(db, "users"), where("username", "==", newUsername));
+      const querySnapshot = await getDocs(usernameQuery);
+      return (querySnapshot.empty); // Return true if username is available
+    } catch (error) {
+      console.error("Error checking username availability:", error);
+      return false; // In case of error, return false (username might be taken or error occurred)
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     if (!username || !age ) return;
+
+    if (username.startsWith(" ")) {
+      setError("Name cannot start with a space.");
+      return;
+    }
 
     const user = auth.currentUser;
 
@@ -129,11 +149,16 @@ return (
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg 
-                           focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black"
+                  onChange={async (e) => {
+                    const newUsername = e.target.value;
+                    setUsername(newUsername);
+                    const isAvailable = await checkUsernameAvailability(newUsername);
+                    setIsUsernameAvailable(isAvailable);
+                  }}
+                  className={`block w-full px-4 py-3 bg-gray-50 border ${isUsernameAvailable ? 'border-gray-300' : 'border-red-500'} rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black`}
                   placeholder="Choose your username"
                 />
+                {!isUsernameAvailable && <p className="text-red-500">Username is taken.</p>}
               </div>
   
               <div>
@@ -197,6 +222,12 @@ return (
                 </div>
               </div>
             </div>
+
+            {error && (
+            <div className="mt-4 text-red-500 border border-red-500 p-2 rounded">
+              {error}
+            </div>
+            )}
   
             <button
               type="submit"

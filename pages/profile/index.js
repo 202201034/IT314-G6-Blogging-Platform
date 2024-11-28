@@ -118,6 +118,7 @@ export default function ProfilePage() {
 
   const checkUsernameAvailability = async (newUsername) => {
     try {
+      newUsername = newUsername.trim();
       const usernameQuery = query(collection(db, "users"), where("username", "==", newUsername));
       const querySnapshot = await getDocs(usernameQuery);
       return ((user.username===newUsername) || querySnapshot.empty); // Return true if username is available
@@ -130,7 +131,10 @@ export default function ProfilePage() {
   const handleSave = async () => {
     try {
       const currentUserUid = auth.currentUser.uid;
-
+      if (username.startsWith(" ")) {
+        setError("Name cannot start with a space.");
+        return;
+      }
       // Check if the new username is available
       const usernameAvailable = await checkUsernameAvailability(username);
       if (!usernameAvailable) {

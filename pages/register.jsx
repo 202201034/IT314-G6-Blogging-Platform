@@ -26,6 +26,15 @@ export default function Register() {
 
   const signupHandler = async () => {
     if (!email || !password || !username) return;
+    if (username.startsWith(" ")) {
+      setError("Name cannot start with a space.");
+      return;
+    }
+  
+    if (password.startsWith(" ")) {
+      setError("Password cannot start with a space.");
+      return;
+    }
     try {
       // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
