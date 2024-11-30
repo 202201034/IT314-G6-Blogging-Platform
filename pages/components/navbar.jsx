@@ -197,11 +197,10 @@ export default function Navbar() {
   useEffect(() => {
 
     const handleClickOutside = (event) => {
+      // Make sure notification conditions are not used due to authentication.
       if (
         profileMenuRef.current &&
         !profileMenuRef.current.contains(event.target) &&
-        notificationMenuRef.current &&
-        !notificationMenuRef.current.contains(event.target) &&
         searchRef.current &&
         !searchRef.current.contains(event.target)
       ) {

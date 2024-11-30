@@ -8,9 +8,7 @@ npm install firebase
 npm install dotenv
 npm install lucide-react
 npm install @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/react-fontawesome
-npm install antd
-or
-npm install @ant-design/icons
+npm install ons
 npm install react-icons
 npm install quill
 npm install react-quill
