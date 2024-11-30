@@ -186,7 +186,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-200 p-8">
+    <div className="min-h-screen bg-blue-200 p-8" style={{backgroundColor : '#f0f4f8'}}>
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
         {error && (
           <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md">
@@ -221,7 +221,7 @@ export default function ProfilePage() {
 
     {/* Profile Picture, Name, Bio, and Stats Section */}
     <div className="flex items-start mb-8">
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 w-1/4">
         {profileImage ? (
           <img
             src={profileImage}
@@ -234,35 +234,36 @@ export default function ProfilePage() {
           </div>
         )}
         <div className="text-center mt-4">
-          <span className="text-lg font-normal text-gray-800">{name}</span>
+          <span className="text-lg font-normal text-gray-800 mr-12">{name}</span>
         </div>
-        <div className="text-center mt-2 text-gray-500">
-          <p>{bio || "............................."}</p>
+        <div className="text-center mt-2 text-gray-500 max-w-xl">
+          <p className="whitespace-pre-wrap break-words overflow-hidden"
+          style={{ wordWrap: 'break-word', maxWidth: '100%' }}
+          >{bio || "............................."}</p>
         </div>
       </div>
 
       {/* Stats - Centered Inline with Profile Picture */}
       <div className="flex-1 ml-8 flex justify-center items-center">
-        <div className="flex space-x-12 text-center">
-          <div>
+
+          <div className = "flex-1 text-center">
             <div className="text-indigo-500 font-semibold text-lg">
               {userBlogs.length}
             </div>
             <div className="text-gray-600 text-sm">Blogs</div>
           </div>
-          <div>
+          <div className = "flex-1 text-center" >
             <div className="text-indigo-500 font-semibold text-lg">
               {followingCount}
             </div>
             <div className="text-gray-600 text-sm">Following</div>
           </div>
-          <div>
+          <div className = "flex-1 text-center">
             <div className="text-indigo-500 font-semibold text-lg">
               {followersCount}
             </div>
             <div className="text-gray-600 text-sm">Followers</div>
           </div>
-        </div>
       </div>
     </div>
 

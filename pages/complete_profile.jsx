@@ -18,13 +18,19 @@ const ProfileSetup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true);
   const [error, setError] = useState("");
-
+  const [imageError, setImageError] = useState("");
 
   const router = useRouter();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const maxSizeInBytes = 1048487; // Approx. 1 MB
+      if (file.size > maxSizeInBytes) {
+        setImageError("Image size should be less than 1 MB.");
+        setImagePreview(null); // Clear preview if invalid
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -141,7 +147,12 @@ return (
                 </label>
               </div>
             </div>
-  
+
+            {imageError && (
+                <div className="mt-4 text-red-500 border border-red-500 p-2 rounded">
+                {imageError}
+                </div>
+            )}         
             {/* Form Fields with Modern Styling */}
             <div className="space-y-6">
               <div>
