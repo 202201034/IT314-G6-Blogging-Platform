@@ -351,6 +351,18 @@ export default function ProfilePage() {
                   {!isUsernameAvailable && <p className="text-red-500">Username is taken.</p>}
                 </div>
 
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <textarea
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    rows="1"
+                    className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-black resize-none"
+                    placeholder="Name"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
                   <textarea

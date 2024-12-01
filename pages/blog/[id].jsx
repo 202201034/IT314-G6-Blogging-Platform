@@ -367,9 +367,6 @@ const showBlog = ({ blog,username,profileImage }) => {
             await deleteDoc(blogRef);
         
             // Clear the editor and reset the draft state
-            setTitle('');
-            setContent('');
-            setHashtags([]);
             console.log("I'm here");
             router.push('/profile');
             alert('Blog deleted successfully!');

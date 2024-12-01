@@ -62,15 +62,17 @@ export default function ProfilePage() {
               const userDoc = userSnapshot.docs[0];
               const userData = userDoc.data();
 
+              if (currentUser && currentUser.uid === userData.uid) {
+                router.push('/profile');
+                return; // Prevent further processing
+              }
+
               if (userData.uid) {
                 setUser(userData);
                 setName(userData.name);
                 setBio(userData.bio || '');
                 setUsername(userData.username);
                 setProfileImage(userData.profileImage || '');
-                if(userData.uid == currentUser.uid){
-                  Router.push('/profile');
-                }
 
                 // Fetching user's blogs
                 const blogsQuery = query(

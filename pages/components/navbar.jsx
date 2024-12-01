@@ -212,6 +212,7 @@ export default function Navbar() {
       if (
         profileMenuRef.current &&
         !profileMenuRef.current.contains(event.target) &&
+        !notificationMenuRef.current.contains(event.target) &&
         searchRef.current &&
         !searchRef.current.contains(event.target)
       ) {
