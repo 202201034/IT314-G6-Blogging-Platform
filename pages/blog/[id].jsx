@@ -6,7 +6,7 @@ import { FaHeart,FaRegHeart,FaBookBookmark,FaRegBookmark, FaBookmark, FaShare, F
 import { HiBookmark, HiOutlineBookmark } from "react-icons/hi";
 import { isLoggedIn } from '@/firebase/firebaseutils';
 import { db } from '../../firebase/firebase';
-import { doc, getDoc, getDocs, collection, deleteDoc,setDoc,updateDoc,increment,arrayUnion,arrayRemove } from 'firebase/firestore';
+import { doc, getDoc,writeBatch, userDoc, getDocs, collection, deleteDoc,setDoc,updateDoc,increment,arrayUnion,arrayRemove } from 'firebase/firestore';
 import { useRouter } from "next/router";
 import { getAuth } from "firebase/auth";
 import { useEffect, useState } from "react";
@@ -27,6 +27,7 @@ const showBlog = ({ blog,username,profileImage }) => {
     const [savedBlogs, setSavedBlogs] = useState([]);
     const [loading, setLoading] = useState(true); // Loading state
     const [blogusername, setBlogUserName] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
 
 
     // Fetch the current user's ID
@@ -127,66 +128,80 @@ const showBlog = ({ blog,username,profileImage }) => {
   };
 
   // Function to handle like/unlike
+  //Optimized code for like unlike
+  //Batch function used
+  //Local states updated first
   const handleLike = async () => {
+    console.log(currentUser);
     if (!currentUser) {
-      router.push("/login"); // Redirect to login if not logged in
-      return;
+        router.push("/login");
+        return;
+    }
+
+    setIsProcessing(true); // Prevent multiple clicks
+
+    // Log blogId and currentUser.uid to check if they are valid
+    console.log("blogId:", blogId);
+    console.log("currentUser.uid:", currentUser?.uid);
+
+    if (!blogId || !currentUser) {
+        console.error("Invalid blogId or currentUser.uid");
+        setIsProcessing(false);
+        return;
     }
 
     try {
-      const blogRef = doc(db, 'blogs', blogId);
-      const userRef = doc(db, 'users', currentUser);
+        const blogRef = doc(db, 'blogs', blogId); // Make sure blogId is valid
+        const userRef = doc(db, 'users', currentUser); // Use currentUser.uid
 
-      // Fetch user and blog data from Firestore
-      const userDoc = await getDoc(userRef);
-      const blogDoc = await getDoc(blogRef);
-
-      if (userDoc.exists() && blogDoc.exists()) {
-        console.log('exist');
-        // Initialize likeCount and likedBlogIds if they do not exist
-        const currentLikeCount = blogDoc.data().likeCount || 0;
-        console.log(currentLikeCount);
-        const likedBlogIds = userDoc.data().likedBlogIds || [];
-        console.log(!!likedBlogIds);
-        
-
-        // Toggle like/unlike behavior
-        if (likedBlogIds.includes(blogId)) {
-          // User has already liked the blog, so unlike it
-          console.log('1');
-          await updateDoc(blogRef, {
-            likeCount: increment(-1), // Decrement like count
-          });
-          await updateDoc(userRef, {
-            likedBlogIds: arrayRemove(blogId), // Remove blogId from likedBlogIds array
-          });
-          setIsLiked(false); // Set like state to false
-          setLikeCount(currentLikeCount - 1); // Update local like count
-        } else {
-          // User has not liked the blog, so like it
-          console.log('not liked');
-          await updateDoc(blogRef, {
-            likeCount: increment(1), // Increment like count
-          });
-          await updateDoc(userRef, {
-            likedBlogIds: arrayUnion(blogId), // Add blogId to likedBlogIds array
-          });
-          const title = DOMPurify.sanitize(blog.title);
-          const plainTextMessage = title.replace(/<[^>]*>/g, '');
-
-          const message = `${currentusername} liked your blog ${plainTextMessage}.`;
-          const metadata = { type: "like", blogId: "BLOG_ID" }; // Add relevant metadata
-
-          await addNotificationToUser(blog.userId, message, metadata);
-          console.log('notification');
-          setIsLiked(true); // Set like state to true
-          setLikeCount(currentLikeCount + 1); // Update local like count
+        // Fetch user data to check likedBlogIds
+        const userDoc = await getDoc(userRef);
+        if (!userDoc.exists()) {
+            console.error("User data not found");
+            return;
         }
-      }
+
+        const likedBlogIds = userDoc.data()?.likedBlogIds || []; // Safe access with optional chaining
+
+        const currentLikeCount = likeCount; // Use local state
+
+        if (likedBlogIds.includes(blogId)) {
+            // Optimistic UI update
+            setIsLiked(false);
+            setLikeCount(currentLikeCount - 1);
+
+            // Database operation in the background
+            const batch = writeBatch(db);
+            batch.update(blogRef, { likeCount: increment(-1) });
+            batch.update(userRef, { likedBlogIds: arrayRemove(blogId) });
+            await batch.commit();
+        } else {
+            setIsLiked(true);
+            setLikeCount(currentLikeCount + 1);
+
+            const batch = writeBatch(db);
+            batch.update(blogRef, { likeCount: increment(1) });
+            batch.update(userRef, { likedBlogIds: arrayUnion(blogId) });
+            await batch.commit();
+
+            const title = DOMPurify.sanitize(blog.title).replace(/<[^>]*>/g, '');
+            const message = `${currentusername} liked your blog ${title}.`;
+            const metadata = { type: "like", blogId: blogId };
+
+            await addNotificationToUser(blog.userId, message, metadata);
+        }
     } catch (error) {
-      console.error('Error liking/unliking blog:', error);
+        console.error('Error liking/unliking blog:', error);
+        // Revert optimistic update if necessary
+        setIsLiked(!isLiked);
+        setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
+    } finally {
+        setIsProcessing(false); // Re-enable the button
     }
 };
+
+
+
 
 
   // Fetch the initial like status and count when component mounts
