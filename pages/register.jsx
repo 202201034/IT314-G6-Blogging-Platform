@@ -8,6 +8,8 @@ import Image from "next/image";
 import { useAuth } from "@/firebase/auth";
 import { useRouter } from "next/router";
 import Loader from "./components/Loader";
+import emailjs from "emailjs-com";
+
 
 const provider = new GoogleAuthProvider();
 export default function Register() {
@@ -39,6 +41,21 @@ export default function Register() {
       // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+
+      const templateParams = {
+        name: username,
+        email: email,
+      };
+  
+      try{await emailjs.send(
+        "service_ijq19bt",  // Replace with your service ID from EmailJS
+        "template_mgiaxzj", // Replace with your template ID from EmailJS
+        templateParams,
+        "1bBzmcz0USF1wLjAc"          // Replace with your user ID from EmailJS
+      );}catch{
+        console.log('email error');
+      }
 
       // Update display name in Firebase Authentication profile
       await updateProfile(user, {
@@ -86,6 +103,21 @@ export default function Register() {
           email: user.email,
           uid: user.uid
         });
+      }
+
+
+      const templateParams = {
+        name: username,
+        email: email,
+      };
+  
+      try{await emailjs.send(
+        "service_ijq19bt",  // Replace with your service ID from EmailJS
+        "template_mgiaxzj", // Replace with your template ID from EmailJS
+        templateParams,
+        "1bBzmcz0USF1wLjAc"          // Replace with your user ID from EmailJS
+      );}catch{
+        console.log('email error');
       }
 
       console.log("User signed in with Google and data stored in Firestore if new");

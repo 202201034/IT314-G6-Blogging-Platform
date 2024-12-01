@@ -7,6 +7,7 @@ import { setDoc, doc } from "firebase/firestore";
 import { getDocs,query,collection,where } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import Loader from './components/Loader';
+import emailjs from 'emailjs-com';
 
 const ProfileSetup = () => {
   const [imagePreview, setImagePreview] = useState(null);
@@ -77,6 +78,21 @@ const ProfileSetup = () => {
           interests,
           profileImage: imagePreview,
         }, { merge: true });
+
+
+        const templateParams = {
+          name: username,
+          email: user.email,
+        };
+    
+        try{await emailjs.send(
+          "service_ijq19bt",  // Replace with your service ID from EmailJS
+          "template_mgiaxzj", // Replace with your template ID from EmailJS
+          templateParams,
+          "1bBzmcz0USF1wLjAc"          // Replace with your user ID from EmailJS
+        );}catch{
+          console.log('email error');
+        }
 
         router.push('/');
       } catch (error) {

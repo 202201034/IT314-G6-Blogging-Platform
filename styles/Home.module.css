@@ -140,9 +140,9 @@
   flex-direction: row;
   flex-wrap: nowrap; 
   gap: 20px;
-  overflow-x: auto;
   padding: 20px;
   scroll-snap-type: x mandatory;
+  overflow-x: scroll;
 }
 
 .card {
@@ -160,6 +160,26 @@
   transition: transform 0.3s ease;
   scroll-snap-align: start;
 }
+.profilecard {
+  animation: appear ease-in-out;
+  animation-timeline: view();
+  animation-range: entry 0%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex: 0 0 auto;
+  align-items: center;
+  align-content: center;
+  justify-items: center;
+  width: 200px;
+  height: 200px;
+  padding: 20px;
+  box-sizing: border-box;
+  transition: transform 0.3s ease;
+  scroll-snap-align: start;
+}
+
+
 
 .cardTitle {
   font-size: 18px;

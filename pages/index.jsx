@@ -195,14 +195,14 @@ export default function Home() {
       <main className={styles.mainContent}>
         {/*Top Blogs Section*/}
         <section className={styles.section}>
-          <h2 className={styles.sectionHeading} data-aos="fade-up">
+          <h2 className={styles.sectionHeading} data-aos="fade-right">
             Top Blogs
           </h2>
-          <div className={styles.cardContainer}>
+          <div className={styles.cardContainer} data-aos="fade-left">
             {blogs.map((blog) => (
               <div key={blog.id} className={styles.card}>
                 <h3 className={styles.cardTitle} dangerouslySetInnerHTML={{ __html: blog.title }} />
-                <h3 className={styles.cardDescription} dangerouslySetInnerHTML={{ __html: blog.username }} />
+                <h3 className={styles.cardDescription} dangerouslySetInnerHTML={{ __html: '@'+blog.username }} />
                 <Link href={`/blog/${blog.id}`} className={styles.readMore}>
                   Read more
                 </Link>
@@ -213,18 +213,33 @@ export default function Home() {
 
         {/*Recommended Profiles Section*/}
         <section className={styles.section}>
-          <h2 className={styles.sectionHeading1} data-aos="fade-up">
+          <h2 className={styles.sectionHeading1} data-aos="fade-right">
             Recommended Profiles
           </h2>
-          <div className={styles.cardContainer}>
+          <div className={styles.cardContainer} data-aos="fade-left">
             {profiles.map((profile) => (
-              <div key={profile.id} className={styles.card}>
-                <h3 className={styles.cardTitle}>{profile.username}</h3>
-                <p className={styles.cardDescription}>{profile.bio || 'No bio available'}</p>
-                <Link href={`/profile/${profile.username}`} className={styles.readMore}>
-                  View Profile
-                </Link>
+              <div key={profile.id} className={styles.profilecard}>
+              {/* Profile Image */}
+              <div className={styles.profileImageWrapper}>
+              <img
+                src={profile.profileImage || "/profile_picture.png"}
+                alt={profile.username}
+                style={{
+                  width: "64px",
+                  height: "64px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                }}
+              />
               </div>
+      
+              {/* Username */}
+              <h3 className={styles.cardTitle}> @{profile.username}</h3>
+              
+              <Link href={`/profile/${profile.username}`} className={styles.readMore}>
+                View Profile
+              </Link>
+            </div>
             ))}
           </div>
         </section>
@@ -232,10 +247,10 @@ export default function Home() {
         {/*Recent Blogs Section*/}
         {savedBlogs.length > 0 && (
   <section className={styles.section}>
-    <h2 className={styles.sectionHeading1} data-aos="fade-up">
+    <h2 className={styles.sectionHeading1} data-aos="fade-right">
       Saved Blogs
     </h2>
-    <div className={styles.cardContainer}>
+    <div className={styles.cardContainer} data-aos="fade-left">
       {savedBlogs.map((blog) => (
         <div key={blog.id} className={styles.card}>
           <h3 className={styles.cardTitle} dangerouslySetInnerHTML={{ __html: blog.title }} />

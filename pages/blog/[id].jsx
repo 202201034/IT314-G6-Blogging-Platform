@@ -40,6 +40,11 @@ const showBlog = ({ blog,username,profileImage }) => {
             fetchCurrentUsername(user.uid);
         } else {
             setCurrentUser(null); // No user is logged in
+            setLoading(false); // Set loading false when the user is not logged in
+
+
+
+
         }
         });
 
