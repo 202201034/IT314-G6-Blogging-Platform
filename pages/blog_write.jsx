@@ -92,8 +92,6 @@ export default function BlogEditor() {
           console.error('Error fetching blog:', error);
           setError('Failed to fetch blog: ' + error.message);
         }
-      } else {
-        console.warn("No blogId provided in query parameters.");
       }
     };
   

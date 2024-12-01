@@ -195,11 +195,11 @@ export default function ProfilePage() {
           </div>
         )}
         {user ? (
-          <div className="space-y-8">
+          <div className="">
             {/* Header Section */}
             {!isEditing ? (
   <>
-    <div className="flex justify-between items-center mb-6">
+    <div className="flex justify-between items-center mt-4 mb-6">
       <span className="text-xl text-gray-700 font-normal">@{username}</span>
       <div className="flex items-center space-x-3">
         <button
@@ -212,7 +212,7 @@ export default function ProfilePage() {
     </div>
 
     {/* Profile Picture, Name, Bio, and Stats Section */}
-    <div className="flex items-start mb-8">
+    <div className="flex items-start mt-4">
       <div className="flex-shrink-0 w-1/4">
         {profileImage ? (
           <img src={profileImage} alt="Profile" className="w-24 h-24 rounded-full border border-gray-200" />
@@ -221,15 +221,7 @@ export default function ProfilePage() {
             <span className="text-gray-400">No Image</span>
           </div>
         )}
-        <div className="text-center mt-4">
-          <span className="text-lg font-normal text-gray-800 mr-12">{name}</span>
-        </div>
-        <div className="text-center mt-2 text-gray-500 max-w-xl">
-          <p
-            className="whitespace-pre-wrap break-words overflow-hidden"
-            style={{ wordWrap: 'break-word', maxWidth: '100%' }}
-          >{bio || "............................."}</p>
-        </div>
+  
       </div>
 
       {/* Stats - Centered Inline with Profile Picture */}
@@ -250,9 +242,17 @@ export default function ProfilePage() {
         
       </div>
     </div>
+    <div className="mt-4">
+          <span className="text-lg font-normal text-gray-800 mr-12">{name}</span>
+        </div>
+    <div className="text-center mt-2 text-gray-500 max-w-xl">
+          <p className="whitespace-pre-wrap break-words overflow-hidden"
+          style={{ wordWrap: 'break-word', maxWidth: '60%', textAlign: 'left' }}
+          >{bio || "............................."}</p>
+        </div>
 
     {/* Blogs Section */}
-    <div className="w-full">
+    <div className="w-full mt-8">
       <h2 className="text-xl font-medium text-gray-700 mb-6">
         Your Blogs
       </h2>

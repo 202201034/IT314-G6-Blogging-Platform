@@ -79,12 +79,18 @@ export default function Navbar() {
     Router.push('/profile');
   };
 
+  const stripHTML = (html) => {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+  };
+  
   const handleSearch = async (e) => {
     if (!searchTerm) return;
-
+  
     try {
       console.log("Searching for:", searchTerm);
-
+  
       // Query for users by username
       const userQuery = query(
         collection(db, 'users'),
@@ -95,33 +101,39 @@ export default function Navbar() {
       const users = userSnap.docs.map(doc => ({
         id: doc.id,
         username: doc.data().username,
-        profileImage: doc.data().profileImage || '/default-avatar.png', // Default profile picture
+        profileImage: doc.data().profileImage || '/default-avatar.png',
         type: 'user'
       }));
-
+  
       console.log("Users found:", users);
-
+  
       // Query for blogs by title
-      const blogQuery = query(
-        collection(db, 'blogs'),
-        where('title', '>=', searchTerm),
-        where('title', '<=', searchTerm + '\uf8ff')
-      );
+      const blogQuery = query(collection(db, 'blogs'));
       const blogSnap = await getDocs(blogQuery);
-      const blogs = blogSnap.docs.map(doc => ({
-        id: doc.id,
-        title: doc.data().title,
-        type: 'blog'
-      }));
-
+  
+      // Filter blogs by converting title to plain text
+      const blogs = blogSnap.docs
+        .map(doc => {
+          const title = doc.data().title;
+          const plainTitle = stripHTML(title);
+          return {
+            id: doc.id,
+            title, // HTML-formatted title
+            plainTitle,
+            type: 'blog'
+          };
+        })
+        .filter(blog => blog.plainTitle.toLowerCase().includes(searchTerm.toLowerCase()));
+  
       console.log("Blogs found:", blogs);
-
+  
       // Combine results
       setSearchResults([...users, ...blogs]);
     } catch (error) {
       console.error("Error fetching search results:", error);
     }
   };
+  
 
 
   const toggleProfileMenu = () => {
@@ -197,7 +209,6 @@ export default function Navbar() {
   useEffect(() => {
 
     const handleClickOutside = (event) => {
-      // Make sure notification conditions are not used due to authentication.
       if (
         profileMenuRef.current &&
         !profileMenuRef.current.contains(event.target) &&
@@ -280,7 +291,7 @@ export default function Navbar() {
                       </div>
                     )}
                     <p className="text-sm text-white">
-                      {result.type === 'user' ? `${result.username}` : `Blog: ${result.title}`}
+                      {result.type === 'user' ? `${result.username}` : `Blog: ${result.plainTitle}`}
                     </p>
                   </div>
                 ))}
@@ -309,22 +320,22 @@ export default function Navbar() {
               {isNotificationMenuOpen && (
                 <div className="absolute top-full right-0 w-80 bg-neutral-800 rounded-md shadow-lg max-h-64 overflow-y-auto z-10 mt-2">
                   {notifications.map((notification) => (
-    <div key={notification.id} className="p-4 border-b border-neutral-700 flex justify-between items-center">
-      <div>
-        <p className="text-sm text-white">{notification.message}</p>
-        <p className='text-xs'>
-          {notification.timestamp ? format(notification.timestamp.toDate(), 'MMM dd, yyyy HH:mm') : 'No timestamp'}
-        </p>
-      </div>
-      {/* Delete button */}
-      <button
-        onClick={() => handleDeleteNotification(notification.id)}
-        className="text-red-500 hover:text-red-700"
-      >
-        <FontAwesomeIcon icon={faTrash} className="text-lg" />
-      </button>
-    </div>
-  ))}
+                    <div key={notification.id} className="p-4 border-b border-neutral-700 flex justify-between items-center">
+                      <div>
+                        <p className="text-sm text-white">{notification.message}</p>
+                        <p className='text-xs'>
+                          {notification.timestamp ? format(notification.timestamp.toDate(), 'MMM dd, yyyy HH:mm') : 'No timestamp'}
+                        </p>
+                      </div>
+                      {/* Delete button */}
+                      <button
+                        onClick={() => handleDeleteNotification(notification.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="text-lg" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

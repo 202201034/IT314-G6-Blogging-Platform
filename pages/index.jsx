@@ -32,12 +32,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const fetchBlogsAndProfiles = async (retry = 3) => {
+    const fetchBlogsAndProfiles = async () => {
       try {
+        setLoading(true); // Start loading
         const userInterests = authUser?.interests || [];
         let fetchedBlogs = [];
-    
-        // Fetch blogs based on user interests
+  
+        console.log('User Interests:', userInterests);
+  
         if (userInterests.length > 0) {
           const interestQuery = query(
             collection(db, 'blogs'),
@@ -49,8 +51,7 @@ export default function Home() {
             ...doc.data(),
           }));
         }
-    
-        // Fallback to most liked blogs if no blogs match user interests
+  
         if (fetchedBlogs.length === 0) {
           const popularQuery = query(
             collection(db, 'blogs'),
@@ -63,8 +64,7 @@ export default function Home() {
             ...doc.data(),
           }));
         }
-    
-        // Fallback to random blogs if no "most liked" blogs are found
+  
         if (fetchedBlogs.length === 0) {
           const randomQuery = query(collection(db, 'blogs'), limit(10));
           const querySnapshot = await getDocs(randomQuery);
@@ -73,8 +73,7 @@ export default function Home() {
             ...doc.data(),
           }));
         }
-
-        // Fetch usernames for each blog
+  
         const enrichedBlogs = await Promise.all(
           fetchedBlogs.map(async (blog) => {
             if (blog.userId) {
@@ -92,63 +91,47 @@ export default function Home() {
             return blog;
           })
         );
-
-        // Fetch recommended profiles based on interests or recent activity
-        let fetchedProfiles = [];
+  
+        setBlogs(enrichedBlogs.sort(() => 0.5 - Math.random()));
+  
         if (userInterests.length > 0) {
           const profilesQuery = query(
             collection(db, 'users'),
             where('interests', 'array-contains-any', userInterests),
-            limit(5)
-          );
-          const profilesSnapshot = await getDocs(profilesQuery);
-          fetchedProfiles = profilesSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-        }
-        if (fetchedProfiles.length === 0) {
-          const popularQuery = query(
-            collection(db, 'users'),
-            orderBy('followersCount', 'desc'),
             limit(10)
           );
-          const querySnapshot = await getDocs(popularQuery);
-          fetchedProfiles = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
+          const profilesSnapshot = await getDocs(profilesQuery);
+          setProfiles(
+            profilesSnapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+          );
+        } else {
+          const randomProfilesQuery = query(
+            collection(db, 'users'),
+            limit(10)
+          );
+          const profilesSnapshot = await getDocs(randomProfilesQuery);
+          setProfiles(
+            profilesSnapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+          );
         }
-
-
-        if (fetchedProfiles.length === 0) {
-          const randomQuery = query(collection(db, 'users'), limit(10));
-          const querySnapshot = await getDocs(randomQuery);
-          fetchedProfiles = querySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-        }
-        setProfiles(fetchedProfiles);
-
-        // Shuffle blogs to make them appear random
-        setBlogs(enrichedBlogs.sort(() => 0.5 - Math.random()));
       } catch (error) {
         console.error('Error in fetchBlogsAndProfiles:', error);
-        if (retry > 0) {
-          fetchBlogsAndProfiles(retry - 1);
-        }
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop loading
       }
     };
-
-    if (authUser) {
+  
+    if (authUser !== undefined) { // Ensure auth state is resolved
       fetchBlogsAndProfiles();
-    } else {
-      setLoading(false);
     }
   }, [authUser]);
+  
 
   if (loading) {
     return <Loader />;

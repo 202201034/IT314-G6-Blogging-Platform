@@ -68,6 +68,9 @@ export default function ProfilePage() {
                 setBio(userData.bio || '');
                 setUsername(userData.username);
                 setProfileImage(userData.profileImage || '');
+                if(userData.uid == currentUser.uid){
+                  Router.push('/profile');
+                }
 
                 // Fetching user's blogs
                 const blogsQuery = query(
@@ -220,7 +223,7 @@ export default function ProfilePage() {
     
 
     {/* Profile Picture, Name, Bio, and Stats Section */}
-    <div className="flex items-start mb-8">
+    <div className="flex items-start ">
       <div className="flex-shrink-0 w-1/4">
         {profileImage ? (
           <img
@@ -233,15 +236,8 @@ export default function ProfilePage() {
             <span className="text-gray-400">No Image</span>
           </div>
         )}
-        <div className="text-center mt-4">
-          <span className="text-lg font-normal text-gray-800 mr-12">{name}</span>
-        </div>
-        <div className="text-center mt-2 text-gray-500 max-w-xl">
-          <p className="whitespace-pre-wrap break-words overflow-hidden"
-          style={{ wordWrap: 'break-word', maxWidth: '100%' }}
-          >{bio || "............................."}</p>
-        </div>
       </div>
+      
 
       {/* Stats - Centered Inline with Profile Picture */}
       <div className="flex-1 ml-8 flex justify-center items-center">
@@ -266,9 +262,17 @@ export default function ProfilePage() {
           </div>
       </div>
     </div>
+    <div className=" mt-4">
+          <span className="text-lg font-normal text-gray-800 mr-12">{name}</span>
+        </div>
+    <div className="text-center mt-2 text-gray-500 max-w-xl">
+          <p className="whitespace-pre-wrap break-words overflow-hidden"
+          style={{ wordWrap: 'break-word', maxWidth: '60%', textAlign: 'left' }}
+          >{bio || "............................."}</p>
+        </div>
 
     {/* Blogs Section */}
-    <div className="w-full">
+    <div className="w-full mt-10">
       <h2 className="text-xl font-medium text-gray-700 mb-6">Blogs</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {userBlogs.map((blog) => (
