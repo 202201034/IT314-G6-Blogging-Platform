@@ -27,6 +27,23 @@ export default function Login() {
     }
   }, [authUser, isLoading, isChecking]);
 
+
+
+const deleteUser = async () => {
+  const user = auth.currentUser;
+  if (user) {
+    try {
+      await user.delete();
+      console.log("User account deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting user account:", error);
+    }
+  } else {
+    console.error("No user is logged in.");
+  }
+};
+
+
   const loginHandler = async () => {
     setError("");  // Reset error before trying to log in
     if (!email || !password) {
@@ -56,6 +73,7 @@ export default function Login() {
       const querySnapshot = await getDocs(q);
   
       if (querySnapshot.empty) {
+        deleteUser();
         // Log the user out immediately
         await signOut(auth);
         setError("This email does not exist. Please register first.");
