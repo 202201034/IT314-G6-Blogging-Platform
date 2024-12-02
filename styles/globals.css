@@ -12,6 +12,7 @@
 .create-new-blog-btn {
   background-color: #20c997; /* Teal */
   color: #FFFFFF; /* White Text */
+  margin-left: 10px;
   padding: 10px 20px;
   border-radius: 5px;
   font-weight: bold;
@@ -38,3 +39,48 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+
+
+/* Animation for hover and click */
+@keyframes scaleUp {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-5px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+
+.icon {
+  transition: transform 0.3s ease, color 0.2s ease;
+}
+
+.icon:hover {
+  transform: scale(1.1);
+  color: #f39c12; /* Change color on hover (optional) */
+}
+
+.icon.clicked {
+  animation: bounce 0.5s ease-out;
+}
+
+.icon.scale-up {
+  animation: scaleUp 0.5s ease-out;
+}
+

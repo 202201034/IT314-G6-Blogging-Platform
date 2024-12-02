@@ -234,7 +234,7 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
   .unfollowModalContent1 {
-    background-color: rgb(144, 202, 249);
+    background-color: black;
     padding: 20px;
     border-radius: 8px;
     border-color: #3797ef;
@@ -266,13 +266,42 @@
   
   /* Yes button */
   .unfollowModal .yesBtn {
-    background-color: #dc3545; /* Red for "Yes" */
+    background-color: rgb(255, 149, 0); /* Red for "Yes" */
     color: white;
   }
   
   /* No button */
   .unfollowModal .noBtn {
-    background-color: #28a745; /* Green for "Cancel" */
+    background-color: #44cd64; /* Green for "Cancel" */
     color: white;
   }
+
+
+
+  @keyframes slideIn {
+    0% {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOut {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+  }
+  
+  .error-message {
+    animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 3s forwards;
+  }
+  
   

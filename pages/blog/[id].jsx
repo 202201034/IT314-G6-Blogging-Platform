@@ -478,7 +478,15 @@ const showBlog = ({ blog,username,profileImage }) => {
                     
                   
                 ) : (
-                    <span></span>  // Fallback if profile picture is not available
+                  <div style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
+                        <Image
+      src="/profile_picture.png"  // URL of the profile picture
+      alt="Author's Avatar"
+      layout="fill"  // This will make the image fill the parent container
+      objectFit="cover"  // Maintains aspect ratio while filling the container
+      sizes="(max-width: 768px) 100vw, 300px"  // Adjust based on viewport width
+    />
+                    </div>
                 )}
                         <div className={styles.authorDetails}>
                             <p>@{username}</p>

@@ -27,12 +27,18 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [isFollowing, setIsFollowing] = useState(null); // `null` to indicate loading
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false); // To show confirmation box
+  const [loading, setLoading] = useState(true); // Add loading state
+  const [followLoading, setFollowLoading] = useState(false);
+
+
 
   const router = useRouter();
   const { username: usernameParam } = router.query;
 
   useEffect(() => {
     const fetchCurrentUserDetails = async () => {
+      setLoading(true); // Start loading
+
       const currentUser = auth.currentUser;
 
       if (currentUser) {
@@ -114,6 +120,8 @@ export default function ProfilePage() {
           }
         } catch (err) {
           setError(`Error: ${err.message}`);
+        } finally{
+          setLoading(false);
         }
       
     });
@@ -123,8 +131,11 @@ export default function ProfilePage() {
 
   // Function to handle follow/unfollow
   const handleFollow = async () => {
+    
     console.log(isLoggedIn());
     if(isLoggedIn()){
+      setFollowLoading(true);
+
     if (isFollowing) {
       setShowUnfollowConfirm(true); // Show confirmation box for unfollow
     } else {
@@ -147,7 +158,10 @@ export default function ProfilePage() {
       } catch (err) {
         setError(`Error following user: ${err.message}`);
       } 
-    }}else{
+    }
+    setFollowLoading(false);
+
+  }else{
       Router.push('/login');
     }
   };
@@ -191,133 +205,137 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-200 p-8" style={{backgroundColor : '#f0f4f8'}}>
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md">
-            {error}
-          </div>
-        )}
-        {user ? (
-  <div className="mb-6">
-    {/* Profile and Stats Section */}
-    <div className="flex justify-between items-center mb-6">
-      <span className="text-xl text-gray-700 font-normal">@{username}</span>
-      <div className="flex items-center space-x-3">
-        {/* Show the button only after determining the follow status */}
-        {/* not showing on own profile */}
-        {isFollowing !== null && auth.currentUser?.uid !== user?.uid && (
-          <div className="mt-4 flex justify-center">
-            <button
-              onClick={handleFollow}
-              className="py-2 px-4 bg-blue-600 text-white rounded"
-              disabled={isFollowing === null} // Disabled while loading
-            >
-              {isFollowing ? "Unfollow" : "Follow"}
-            </button>
-          </div>
-        )}
-
-
-      </div>
-      
-    </div>
-    
-
-    {/* Profile Picture, Name, Bio, and Stats Section */}
-    <div className="flex items-start ">
-      <div className="flex-shrink-0 w-1/4">
-        {profileImage ? (
-          <img
-            src={profileImage}
-            alt="Profile"
-            className="w-24 h-24 rounded-full border border-gray-200"
-          />
-        ) : (
-          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-400">No Image</span>
-          </div>
-        )}
-      </div>
-      
-
-      {/* Stats - Centered Inline with Profile Picture */}
-      <div className="flex-1 ml-8 flex justify-center items-center">
-
-          <div className = "flex-1 text-center">
-            <div className="text-indigo-500 font-semibold text-lg">
-              {userBlogs.length}
+    <div className="min-h-screen bg-blue-200 p-8" style={{ backgroundColor: '#f0f4f8' }}>
+      {loading ? (
+        <Loader /> // Main loader while fetching data
+      ) : (
+        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
+          {error && (
+            <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-md">
+              {error}
             </div>
-            <div className="text-gray-600 text-sm">Blogs</div>
-          </div>
-          <div className = "flex-1 text-center" >
-            <div className="text-indigo-500 font-semibold text-lg">
-              {followingCount}
+          )}
+          {user ? (
+            <div className="mb-6">
+              {/* Profile and Stats Section */}
+              <div className="flex justify-between items-center mb-6">
+                <span className="text-xl text-gray-700 font-normal">@{username}</span>
+                <div className="flex items-center space-x-3">
+                  {/* Show the button only after determining the follow status */}
+                  {isFollowing !== null && auth.currentUser?.uid !== user?.uid && (
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        onClick={handleFollow}
+                        className={`py-2 px-4
+                          bg-blue-600
+                        text-white rounded`}
+                        disabled={followLoading} // Disable button while loading
+                      >
+                        {isFollowing ? 'Unfollow' : 'Follow'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+  
+              {/* Profile Picture, Name, Bio, and Stats Section */}
+              <div className="flex items-start">
+                <div className="flex-shrink-0 w-1/4">
+                  {profileImage ? (
+                    <img
+                      src={profileImage}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full border border-gray-200"
+                    />
+                  ) : (
+                    <img
+                      src="/profile_picture.png"
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full border border-gray-200"
+                    />
+                  )}
+                </div>
+  
+                {/* Stats - Centered Inline with Profile Picture */}
+                <div className="flex-1 ml-8 flex justify-center items-center">
+                  <div className="flex-1 text-center">
+                    <div className="text-indigo-500 font-semibold text-lg">{userBlogs.length}</div>
+                    <div className="text-gray-600 text-sm">Blogs</div>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <div className="text-indigo-500 font-semibold text-lg">{followingCount}</div>
+                    <div className="text-gray-600 text-sm">Following</div>
+                  </div>
+                  <div className="flex-1 text-center">
+                    <div className="text-indigo-500 font-semibold text-lg">{followersCount}</div>
+                    <div className="text-gray-600 text-sm">Followers</div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4">
+                <span className="text-lg font-normal text-gray-800 mr-12">{name}</span>
+              </div>
+              <div className="text-center mt-2 text-gray-500 max-w-xl">
+                <p
+                  className="whitespace-pre-wrap break-words overflow-hidden"
+                  style={{ wordWrap: 'break-word', maxWidth: '60%', textAlign: 'left' }}
+                >
+                  {bio || '.............................'}
+                </p>
+              </div>
+  
+              {/* Blogs Section */}
+              <div className="w-full mt-10">
+                <h2 className="text-xl font-medium text-gray-700 mb-6">Blogs</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {userBlogs.map((blog) => (
+                    <button
+                      key={blog.id}
+                      onClick={() => handleroute(blog.id)} // Navigate to the blog page
+                      className="bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-md transition-transform transform hover:scale-105 hover:shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    >
+                      <h3
+                        className="text-lg font-medium text-gray-800 mb-2"
+                        dangerouslySetInnerHTML={{
+                          __html: blog.title, // Assume content is HTML stored in the database
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <div className="text-gray-600 text-sm">Following</div>
-          </div>
-          <div className = "flex-1 text-center">
-            <div className="text-indigo-500 font-semibold text-lg">
-              {followersCount}
-            </div>
-            <div className="text-gray-600 text-sm">Followers</div>
-          </div>
-      </div>
-    </div>
-    <div className=" mt-4">
-          <span className="text-lg font-normal text-gray-800 mr-12">{name}</span>
+          ) : (
+            <Loader />
+          )}
         </div>
-    <div className="text-center mt-2 text-gray-500 max-w-xl">
-          <p className="whitespace-pre-wrap break-words overflow-hidden"
-          style={{ wordWrap: 'break-word', maxWidth: '60%', textAlign: 'left' }}
-          >{bio || "............................."}</p>
-        </div>
-
-    {/* Blogs Section */}
-    <div className="w-full mt-10">
-      <h2 className="text-xl font-medium text-gray-700 mb-6">Blogs</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {userBlogs.map((blog) => (
-          <button key={blog.id} 
-          onClick={() => handleroute(blog.id)} // Navigate to the blog page
-          className = "bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-md transition-transform transform hover:scale-105 hover:shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-600">
-            <h3 className="text-lg font-medium text-gray-800 mb-2"
-            dangerouslySetInnerHTML={{
-                    __html: blog.title, // Assume content is HTML stored in the database
-                }}
-              />
-          </button>
-        ))}
-      </div>
-    </div>
-  </div>
-) : (
-  <Loader/>
-)}
-
-      </div>
+      )}
+  
       {showUnfollowConfirm && (
-  <div className={styles.unfollowModal}>
-    <div className={styles.unfollowModalContent1}>
-      <p>Are you sure you want to unfollow?</p>
-      <div>
-        <button 
-          onClick={handleUnfollow} 
-          className={`${styles.unfollowModalButton} ${styles.yesBtn}`}
-        >
-          Yes
-        </button>
-        <button 
-          onClick={cancelUnfollow} 
-          className={`${styles.unfollowModalButton} ${styles.noBtn}`}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className={styles.unfollowModal}>
+          <div className={styles.unfollowModalContent1}>
+            <p>Are you sure you want to unfollow?</p>
+            <div>
+              <button
+                onClick={handleUnfollow}
+                className={`${styles.unfollowModalButton} ${styles.yesBtn}`}
+                disabled={followLoading}
+              >
+                Yes
+              </button>
+              <button
+                onClick={cancelUnfollow}
+                className={`${styles.unfollowModalButton} ${styles.noBtn}`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+  
+
   
 }

@@ -24,6 +24,8 @@ export default function Navbar() {
   const profileMenuRef = useRef(null);
   const notificationMenuRef = useRef(null);
   const [notifications, setNotifications] = useState([]); // For storing notifications
+  const [isClicked, setIsClicked] = useState(false);
+
 
 
 
@@ -101,7 +103,7 @@ export default function Navbar() {
       const users = userSnap.docs.map(doc => ({
         id: doc.id,
         username: doc.data().username,
-        profileImage: doc.data().profileImage || '/default-avatar.png',
+        profileImage: doc.data().profileImage || "/profile_picture.png",
         type: 'user'
       }));
   
@@ -142,6 +144,10 @@ export default function Navbar() {
   };
 
   const toggleNotificationMenu = async () => {
+    setIsClicked(true);
+
+    // Reset click animation after 0.5s
+    
     setIsNotificationMenuOpen(!isNotificationMenuOpen);
     setIsProfileMenuOpen(false);
     console.log('notification');
@@ -164,11 +170,17 @@ export default function Navbar() {
           console.log("No such user document.");
           return [];
         }
+        
       } catch (error) {
         console.error("Error retrieving notifications:", error);
         return [];
       }
     }
+    setTimeout(() => {
+      setIsClicked(false);
+    }, 500);
+
+    
   };
   
 
@@ -282,7 +294,7 @@ export default function Navbar() {
 
 
                         <Image
-                          src={result.profileImage}
+                          src={result.profileImage || "/profile_picture.png"}
                           alt={result.username}
                           width={32}
                           height={32}
@@ -314,10 +326,12 @@ export default function Navbar() {
             {authUser && (
               <div ref={notificationMenuRef} className="relative">
               <FontAwesomeIcon
-                icon={faBell}
-                onClick={toggleNotificationMenu}
-                className="text-white text-xl cursor-pointer"
-              />
+      icon={faBell}
+      onClick={toggleNotificationMenu}
+      className={`text-white text-xl cursor-pointer hover:scale-110 ${
+        isClicked ? 'clicked' : ''
+      } icon`}
+    />
               
               {isNotificationMenuOpen && (
                 <div className="absolute top-full right-0 w-80 bg-neutral-800 rounded-md shadow-lg max-h-64 overflow-y-auto z-10 mt-2">
@@ -355,7 +369,7 @@ export default function Navbar() {
               ref={profileMenuRef}
             >
               <button onClick={toggleProfileMenu} className="focus:outline-none">
-                <FontAwesomeIcon icon={faUser} className="text-white hover:text-orange-500" />
+                <FontAwesomeIcon icon={faUser} className="text-white text-lg hover:text-orange-500" />
               </button>
               {isProfileMenuOpen && profileMenu}
             </div>

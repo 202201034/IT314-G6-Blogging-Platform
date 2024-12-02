@@ -105,6 +105,26 @@ export default function BlogEditor() {
 
     try {
 
+
+      if (!title.trim()) {
+        setError('Title cannot be empty.');
+        // Clear the error after 3 seconds
+    setTimeout(() => {
+      setError('');
+    }, 3000);
+        setIsSubmittingBlog(false);
+        return;
+      }
+      if (!content.trim()) {
+        setError('Content cannot be empty.')
+        // Clear the error after 3 seconds
+    setTimeout(() => {
+      setError('');
+    }, 3000);;
+        setIsSubmittingBlog(false);
+        return;
+      }
+
       // Process content images before saving to Firestore
       const updatedContent = await processContentImages(content);
 
@@ -115,6 +135,7 @@ export default function BlogEditor() {
         userId: auth.currentUser.uid,
         timestamp: new Date(),
       };
+      
 
       if (blogId) {
         // Update existing blog
@@ -146,8 +167,10 @@ export default function BlogEditor() {
 
   const handleSaveDraft = async () => {
 
+    
+
   // Check for empty fields
-  if (!title.trim() && !content.trim() && hashtags.length === 0) {
+  if (!title.trim() && !content.trim()) {
     setError('Cannot save an empty draft.');
     
     // Clear the error after 3 seconds
@@ -266,7 +289,14 @@ export default function BlogEditor() {
 
   return (
     <div className="p-6 flex items-center justify-center" style={{ backgroundColor: '#e9f0f5' }}>
+      {error && (
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-red-500 text-white p-4 rounded-md shadow-md z-50">
+          {error}
+        </div>
+      )}
+      
       <div className="pl-10 mx-auto">
+        
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="p-6 mx-auto justify-center bg-black rounded-md">
             <div>
@@ -364,8 +394,6 @@ export default function BlogEditor() {
           {isSubmittingBlog ? (blogId ? 'Saving Changes...' : 'Publishing...') : (blogId ? 'Save Changes' : 'Publish Blog')}
           </button>
         </div>
-
-            {error && <p className="text-red-500">{error}</p>}
           </form>
       </div>
     </div>
