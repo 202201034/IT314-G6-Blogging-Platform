@@ -9,16 +9,17 @@ const rubik = Rubik({ subsets: ['latin'] })
 export default function RootLayout({ children }) {
   const router = useRouter();
   const [showNavbar, setShowNavbar] = useState(true);
-  const [showFooter, setShowFooter] = useState(true);
+  const [showFooter, setShowFooter] = useState(false);
 
   useEffect(() => {
     // Check if the current route is the login page
     const isLoginPage = router.pathname === '/login';
     const isregisterPage = router.pathname === '/register';
     const iscompleteprofilePage = router.pathname === '/complete_profile';
+    const isindexPage = router.pathname === '/';
 
     setShowNavbar((!isLoginPage) && (!isregisterPage) && (!iscompleteprofilePage));
-    setShowFooter((!isLoginPage) && (!isregisterPage) && (!iscompleteprofilePage));
+    setShowFooter(isindexPage);
 
   }, [router.pathname]);
 
