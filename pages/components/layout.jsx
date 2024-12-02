@@ -18,15 +18,8 @@ export default function RootLayout({ children }) {
     const iscompleteprofilePage = router.pathname === '/complete_profile';
 
     setShowNavbar((!isLoginPage) && (!isregisterPage) && (!iscompleteprofilePage));
-  }, [router.pathname]);
-
-  useEffect(() => {
-    // Check if the current route is the login page
-    const isLoginPage = router.pathname === '/login';
-    const isregisterPage = router.pathname === '/register';
-    const iscompleteprofilePage = router.pathname === '/complete_profile';
-
     setShowFooter((!isLoginPage) && (!isregisterPage) && (!iscompleteprofilePage));
+
   }, [router.pathname]);
 
 

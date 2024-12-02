@@ -1,9 +1,11 @@
+"use client";
 import Image from 'next/image';
 import logo from './logo.png';
 
-export default function footer() {
+export default function Footer() {
 
   const scrollToTop = () => {
+    console.log("scroll");
     window.scrollTo({
       top: 0,
       behavior: "smooth"
@@ -11,10 +13,10 @@ export default function footer() {
   };
 
   return (
-    <footer class="bg-white rounded-lg shadow dark:bg-gray-900 m-0 w-full">
-      <div class="w-full p-4 md:py-8">
-        <div class="sm:flex sm:items-center sm:justify-between">
-          <a onClick={scrollToTop} class="hover:cursor-pointer flex items-center mb-4 sm:mb-0 space-x-3 rtl:space-x-reverse">
+    <footer className="bg-white rounded-lg shadow dark:bg-gray-900 m-0 w-full">
+      <div className="w-full p-4 md:py-8">
+        <div className="sm:flex sm:items-center sm:justify-center">
+          <a onClick={scrollToTop} className="hover:cursor-pointer flex items-center mb-4 sm:mb-0 space-x-auto rtl:space-x-reverse">
             <Image 
               src={logo} 
               alt="Logo" 
@@ -22,39 +24,39 @@ export default function footer() {
               quality={100} 
               placeholder="blur" 
             />
-            <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
+            <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
               blogX
             </span>
           </a>
-          <ul class="flex flex-wrap items-center mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400 gap-x-64">
+          <ul className="flex flex-wrap items-center mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400 gap-x-8">
             <li>
-              <a href="#" class="hover:underline me-4 md:me-6 text-xl md:text-xl">
+              <button onClick={scrollToTop} className="hover:scale-120 text-xl md:text-xl">
                 About
-              </a>
+              </button>
             </li>
             <li>
-              <a href="#" class="hover:underline me-4 md:me-6 text-xl md:text-xl">
+              <button onClick={scrollToTop} className="hover:scale-120 text-xl md:text-xl">
                 Privacy Policy
-              </a>
+              </button>
             </li>
             <li>
-              <a href="#" class="hover:underline me-4 md:me-6 text-xl md:text-xl">
+              <button onClick={scrollToTop} className="hover:scale-120 text-xl md:text-xl">
                 Licensing
-              </a>
+              </button>
             </li>
             <li>
-              <a href="#" class="hover:underline text-xl md:text-xl m-16">
+              <button onClick={scrollToTop} className="hover:scale-120 text-xl md:text-xl">
                 Contact
-              </a>
+              </button>
             </li>
           </ul>
         </div>
-        <hr class="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
-        <p class="block text-sm text-gray-500 sm:text-center dark:text-gray-400 mb-4">
+        <hr className="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
+        <p className="block text-sm text-gray-500 sm:text-center dark:text-gray-400 mb-4">
           Welcome to our blogging platform, where ideas meet creativity. Explore insightful articles, share your thoughts, and connect with a community of thinkers.
         </p>
-        <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">
-          © 2024 <a onClick={scrollToTop} class="hover:underline cursor-pointer">blogX™</a>. @DAIICT
+        <span className="block text-sm text-gray-500 sm:text-center dark:text-gray-400">
+          © 2024 <a onClick={scrollToTop} className="hover:scale-120 cursor-pointer">blogX™</a>. @DAIICT
         </span>
       </div>
     </footer>
