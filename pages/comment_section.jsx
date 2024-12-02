@@ -81,7 +81,7 @@ const CommentsSection = ({ blogId }) => {
     if (userData) {
       setProfilePictures((prev) => ({
         ...prev,
-        [username]: userData.profileImage || "default-profile-pic-url",
+        [username]: userData.profileImage || "/profile_picture.png",
       }));
     }
     setLoadingUsernames((prev) => {
