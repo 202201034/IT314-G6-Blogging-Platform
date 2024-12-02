@@ -24,7 +24,7 @@ export default function Footer() {
               quality={100} 
               placeholder="blur" 
             />
-            <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
+            <span className="self-center text-2xl font-semibold whitespace-nowrap mr-10 dark:text-white">
               blogX
             </span>
           </a>

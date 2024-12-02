@@ -41,6 +41,94 @@
 }
 
 
+/* ResetForm.css */
+.reset-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: black;
+}
+
+.form-container {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 100%;
+}
+
+.title {
+  text-align: center;
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.email-field {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.email-field:focus {
+  border-color: #6200ea;
+  outline: none;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #f39c12;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+  background-color: #3700b3;
+}
+
+
+/* Loader Container */
+.loader-container {
+  width: 100%;
+  height: 5px;
+  background-color: #e0e0e0;
+  margin-top: 20px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* Progress Bar */
+.progress-bar {
+  height: 100%;
+  background-color: #4caf50; /* Green color for the loader */
+}
+
+
+.success-message {
+  color: green;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+
+
 
 /* Animation for hover and click */
 @keyframes scaleUp {

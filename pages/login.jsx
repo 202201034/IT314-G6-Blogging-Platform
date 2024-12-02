@@ -179,6 +179,12 @@ const deleteUser = async () => {
                 Sign up
               </Link>
             </p>
+            <p className="text-gray-600">
+              Forgot Password?{" "}
+              <Link href="/ResetForm" className="text-blue-500 hover:underline">
+                Reset Password
+              </Link>
+            </p>
           </div>
         </div>
       </div>

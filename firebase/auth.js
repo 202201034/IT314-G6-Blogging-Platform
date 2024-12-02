@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, Children } from "react";
 import { onAuthStateChanged, signOut as authSignOut } from "firebase/auth";
 import {auth} from "./firebase";
+
 require('dotenv').config();
 
 const AuthUserContext = createContext({
@@ -64,3 +65,4 @@ export const AuthUserProvider = ({children}) => {
 };
 
 export const useAuth = () => useContext(AuthUserContext);
+export { auth}
