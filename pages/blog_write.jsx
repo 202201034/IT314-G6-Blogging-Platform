@@ -24,6 +24,10 @@ export default function BlogEditor() {
   const [error, setError] = useState('');
   const auth = getAuth();
   const router = useRouter();
+  const [draftIsHovered, setDraftIsHovered] = useState(false);
+  const [publishIsHovered, setPublishIsHovered] = useState(false);
+  const [addIsHovered, setAddIsHovered] = useState(false);
+
 
     //Quill Bubble Editor
     const handleTitleChange = (value) => {
@@ -336,7 +340,12 @@ export default function BlogEditor() {
                   type="button"
                   onClick={addHashtag}
                   className="px-4 py-2 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-0 focus:ring-transparent"
-                  style={{ backgroundColor: '#008AFF' }}
+                  style={{
+                    backgroundColor: addIsHovered ? '#007acc' : '#008AFF', 
+                    transition: 'background-color 0.3s ease', 
+                  }}
+                  onMouseEnter={() => setAddIsHovered(true)}
+                  onMouseLeave={() => setAddIsHovered(false)} 
                 >
                   Add
                 </button>
@@ -366,8 +375,13 @@ export default function BlogEditor() {
               type="button"
               onClick={handleSaveDraft}
               className="px-4 py-2 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-0 focus:ring-transparent"
-              style={{ backgroundColor: '#28a745' }} // Green color for the "Save Draft" button
+              style={{
+                backgroundColor: draftIsHovered ? '#218838' : '#28a745', 
+                transition: 'background-color 0.3s ease' 
+              }}
               disabled={isSavingDraft}
+              onMouseEnter={() => setDraftIsHovered(true)}  // Trigger hover effect
+              onMouseLeave={() => setDraftIsHovered(false)}
             >
             {isSavingDraft ? 'Saving...' : 'Save Draft'}
             </button>
@@ -388,8 +402,13 @@ export default function BlogEditor() {
           <button
             type="submit"
             className="px-4 py-2 text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-0 focus:ring-transparent"
-            style={{ backgroundColor: '#008AFF' }} // Blue color for the "Publish Blog" button
+            style={{
+              backgroundColor: publishIsHovered ? '#007acc' : '#008AFF', // Darker blue on hover
+              transition: 'background-color 0.3s ease', // Smooth transition
+            }}
             disabled={isSubmittingBlog}
+            onMouseEnter={() => setPublishIsHovered(true)}  // Trigger hover effect
+              onMouseLeave={() => setPublishIsHovered(false)} // Reset hover effect
           >
           {isSubmittingBlog ? (blogId ? 'Saving Changes...' : 'Publishing...') : (blogId ? 'Save Changes' : 'Publish Blog')}
           </button>

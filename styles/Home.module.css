@@ -71,17 +71,65 @@
   color: #fff;
   padding: 80px;
   z-index: 2;
+  text-shadow: 
+    0 0 3px rgba(0, 0, 0, 0.5),  
+    0 0 6px rgba(0, 0, 0, 0.3);
 }
 
 .writeButton {
-  display: inline-block;
   padding: 10px 20px;
-  background-color: #4caf50;
+  border: none;
+  outline: none;
   color: #fff;
-  border-radius: 4px;
-  text-decoration: none;
-  transition: background-color 0.3s ease;
-  z-index: 3; 
+  background: #111;
+  cursor: pointer;
+  position: relative;
+  z-index: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+
+.writeButton:before {
+  content: '';
+  background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+  position: absolute;
+  top: -2px;
+  left:-2px;
+  background-size: 400%;
+  z-index: -1;
+  filter: blur(5px);
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  animation: glowing 20s linear infinite;
+  opacity: 0;
+  transition: opacity .3s ease-in-out;
+  border-radius: 10px;
+  opacity: 0.1;
+}
+
+.writeButton:active {
+  color: #000
+}
+
+.writeButton:active:after {
+  background: transparent;
+}
+
+.writeButton:hover:before {
+  opacity: 0.5;
+}
+
+.writeButton:after {
+  z-index: -1;
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #111;
+  left: 0;
+  top: 0;
+  border-radius: 10px;
 }
 
 .imageContainer {
@@ -145,6 +193,11 @@
   overflow-x: scroll;
 }
 
+.cardContainer::-webkit-scrollbar {
+  display: none;
+}
+
+
 .card {
   animation: appear ease-in-out;
   animation-timeline: view();
@@ -198,10 +251,6 @@
   font-size: 14px;
   text-decoration: none;
   transition: color 0.3s ease;
-}
-
-.writeButton:hover {
-  background-color: #45a049;
 }
 
 .card:hover {
@@ -267,4 +316,12 @@
     opacity: 1;
     scale: 1;
   }
+}
+
+
+
+@keyframes glowing {
+  0% { background-position: 0 0; }
+  50% { background-position: 400% 0; }
+  100% { background-position: 0 0; }
 }

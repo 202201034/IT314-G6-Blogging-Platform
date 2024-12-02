@@ -227,6 +227,7 @@ export default function ProfilePage() {
                       <button
                         onClick={handleFollow}
                         className={`py-2 px-4
+                          hover:bg-blue-700
                           bg-blue-600
                         text-white rounded`}
                         disabled={followLoading} // Disable button while loading

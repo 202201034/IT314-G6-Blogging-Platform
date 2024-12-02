@@ -204,7 +204,7 @@ export default function ProfilePage() {
       <div className="flex items-center space-x-3">
         <button
           onClick={handleEdit}
-          className="bg-blue-500 text-white px-4 py-1 rounded-md"
+          className="hover:bg-blue-600 bg-blue-500 text-white px-4 py-1 rounded-md"
         >
           Edit Profile
         </button>
